@@ -8,7 +8,7 @@ import PackageDescription
 
 let package = Package(
     name: "DeviceServices",
-    platforms: [.macOS(.v13)],
+    platforms: [.macOS(.v12)],
     products: [
         .library(name: "HostServiceWire", type: .static, targets: ["HostServiceWire"]),
         .library(name: "HostServiceClient", type: .static, targets: ["HostServiceClient"]),

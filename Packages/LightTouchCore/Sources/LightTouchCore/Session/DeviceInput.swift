@@ -4,7 +4,7 @@
 import DeviceRuntime
 import Foundation
 import HostRuntime
-import Observation
+import Perception
 
 /// What the input reads of the session.
 public protocol InputHost: AnyObject {
@@ -18,9 +18,9 @@ public protocol InputHost: AnyObject {
     func typeThroughAgent(_ text: String) async -> Bool
 }
 
-@Observable public final class DeviceInput {
-    @ObservationIgnored private unowned let host: InputHost
-    @ObservationIgnored private let settings: DeviceSettingsFile
+@Perceptible public final class DeviceInput {
+    @PerceptionIgnored private unowned let host: InputHost
+    @PerceptionIgnored private let settings: DeviceSettingsFile
     public init(host: InputHost, settings: DeviceSettingsFile) {
         self.host = host
         self.settings = settings
@@ -75,9 +75,9 @@ public protocol InputHost: AnyObject {
 
     /// Composed text (DisplayView's NSTextInputClient): it_agent's `type` into the focused field (it_typein),
     /// in order; where the agent can't (no it_typein, no field), the US keys that type it, one by one.
-    @ObservationIgnored private var typing: Task<Void, Never>?
+    @PerceptionIgnored private var typing: Task<Void, Never>?
     /// The gap between typed characters.
-    @ObservationIgnored var keyGap: Duration = .milliseconds(15)
+    @PerceptionIgnored var keyGap: Duration = .milliseconds(15)
     public func typeText(_ text: String, shiftHeld: Bool) {
         guard !text.isEmpty, host.keyboardInputEnabled, host.acceptsInput, !host.isSleeping else { return }
         let previous = typing

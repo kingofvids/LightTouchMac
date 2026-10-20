@@ -1,5 +1,5 @@
 import Foundation
-import Observation
+import Perception
 import Testing
 
 @testable import LightTouchCore
@@ -7,7 +7,7 @@ import Testing
 /// The observers' targeted updates: a loop fires for what its read touched, not for anything else, re-arms after
 /// each change, and follows a new shape of reads after `rearm()`.
 struct ObservationLoopTests {
-    @Observable final class Model {
+    @Perceptible final class Model {
         var shown = 0
         var other = 0
     }

@@ -5,7 +5,7 @@ import HostRuntime
 import HostServiceClient
 import HostServiceWire
 import LightTouchCore
-import Observation
+import Perception
 
 // Owns one device: builds its boot from the device record (a prepared base),
 // starts its usbmuxd (for app management), then runs it in its own
@@ -22,22 +22,22 @@ import Observation
 // host protocol (the extension at the end).
 //
 // Observable (as are its components): the window, the inspector and the sidebar each track what they show
-// (ObservationLoop). Bookkeeping no observer shows is @ObservationIgnored.
+// (ObservationLoop). Bookkeeping no observer shows is @PerceptionIgnored.
 
-@MainActor @Observable
+@MainActor @Perceptible
 final class EmulatorController {
     let profile: Board
     /// Emulated Wi-Fi with the Mac's networking (slirp); off is a device with no internet.
     let network: Bool
     let usbmux = USBMux()
     var started = false
-    @ObservationIgnored var stopped = false
-    @ObservationIgnored var serialCapture: SerialLogCapture?
+    @PerceptionIgnored var stopped = false
+    @PerceptionIgnored var serialCapture: SerialLogCapture?
     /// The GuestFaults phrases this boot's serial log has shown (openSerialLog resets it).
-    @ObservationIgnored var guestFaultsSeen: Set<String> = []
+    @PerceptionIgnored var guestFaultsSeen: Set<String> = []
     /// When this boot powered on, and the processes whose crash reports it has logged (openSerialLog resets both).
-    @ObservationIgnored var poweredOn = Date()
-    @ObservationIgnored var crashesLogged: Set<String> = []
+    @PerceptionIgnored var poweredOn = Date()
+    @PerceptionIgnored var crashesLogged: Set<String> = []
     var isErasing = false { didSet { trackStartup(was: oldValue || state == .booting || preparingDevice) } }
     /// When the current startup (erase, boot, readiness) began: the toast's counter, per device, not per window.
     private(set) var startupBegan = Date()
@@ -51,12 +51,12 @@ final class EmulatorController {
             if guardsStartup { CrashGuard.begin(.deviceStart) } else { CrashGuard.end(.deviceStart) }
         }
     }
-    @ObservationIgnored private var guardsStartup = false
+    @PerceptionIgnored private var guardsStartup = false
 
     var isSleeping = false
     /// The guest runs its vibration motor (an iPhone's), as of the last status poll; the display trembles with it.
-    @ObservationIgnored private(set) var vibrating = false
-    @ObservationIgnored private let vibrationSound = VibrationSound()
+    @PerceptionIgnored private(set) var vibrating = false
+    @PerceptionIgnored private let vibrationSound = VibrationSound()
     /// The status poll's motor state: the buzz and the tremble follow it, and a paused or stopped device is still.
     func updateVibration(_ status: SharedStatus?) {
         let running = state == .running && status?.vibrating == true
@@ -65,10 +65,10 @@ final class EmulatorController {
         vibrationSound.update(running: running, pulses: status.vibratorPulses)
     }
     /// The guest's front app, the web proxy reaching the guest, the end of Setup (ForegroundWatch).
-    @ObservationIgnored private(set) lazy var foreground = ForegroundWatch(host: self)
+    @PerceptionIgnored private(set) lazy var foreground = ForegroundWatch(host: self)
     var foregroundAppName: String? { foreground.appName }
     /// This device's web proxy (DeviceWebProxy): its routing and certificate beside the device's own state.
-    @ObservationIgnored private(set) lazy var proxy = DeviceWebProxy(
+    @PerceptionIgnored private(set) lazy var proxy = DeviceWebProxy(
         directory: { [unowned self] in
             WebProxyConfiguration.directory(for: instance)
         },
@@ -82,9 +82,9 @@ final class EmulatorController {
     var webProxyAvailable: Bool { proxy.available }
     func configureWebProxy(_ value: WebProxyConfiguration) throws { try proxy.configure(value) }
     /// This device's settings.plist (DeviceSettings), read once and written on every change.
-    @ObservationIgnored private lazy var settingsFile = DeviceSettingsFile(directory: instance.paths.directory)
+    @PerceptionIgnored private lazy var settingsFile = DeviceSettingsFile(directory: instance.paths.directory)
     typealias NoticeOperation = DeviceNotices.Operation
-    @ObservationIgnored private(set) lazy var notices = DeviceNotices(
+    @PerceptionIgnored private(set) lazy var notices = DeviceNotices(
         settings: settingsFile,
         shortName: profile.shortName
     ) {
@@ -109,9 +109,9 @@ final class EmulatorController {
     let workers = WorkerRetirement()
     var isPoweredOff: Bool { state == .poweredOff }
 
-    @ObservationIgnored var reportedStorageFailure = false
+    @PerceptionIgnored var reportedStorageFailure = false
     /// From the boot until SpringBoard answers over lockdown; the status line says where it is.
-    @ObservationIgnored private(set) lazy var readiness: ReadinessWatch = {
+    @PerceptionIgnored private(set) lazy var readiness: ReadinessWatch = {
         let readiness = ReadinessWatch(host: self, notices: notices)
         readiness.onPreparingChange = { [weak self] old in
             guard let self else { return }
@@ -165,7 +165,7 @@ final class EmulatorController {
     var connectionIssue: DeviceConnectionIssue? { recovery.issue }
 
     /// The standing issue from failed service reads, and the recovery of an unresponsive management service.
-    @ObservationIgnored private(set) lazy var recovery = ConnectionRecovery(host: self, notices: notices)
+    @PerceptionIgnored private(set) lazy var recovery = ConnectionRecovery(host: self, notices: notices)
     var isReconnecting: Bool { recovery.isReconnecting }
     func reportConnectionFailure(_ error: Error, operation: String) {
         recovery.reportFailure(error, operation: operation)
@@ -175,7 +175,7 @@ final class EmulatorController {
     func reconnectManagement() async throws { try await guest.reconnectManagement() }
     func appsMayHaveChanged() { NotificationCenter.default.post(name: .ltmAppsChanged, object: instance.id) }
 
-    @ObservationIgnored var didSweepStaging = false
+    @PerceptionIgnored var didSweepStaging = false
 
     /// The device record whose state this controller runs.
     var instance: DeviceInstance
@@ -199,9 +199,9 @@ final class EmulatorController {
 
     // MARK: - Mac sleep
 
-    @ObservationIgnored nonisolated(unsafe) private var hostSleepObservers: [NSObjectProtocol] = []
+    @PerceptionIgnored nonisolated(unsafe) private var hostSleepObservers: [NSObjectProtocol] = []
     /// The Mac's sleep and the screen's visibility (HostPower).
-    @ObservationIgnored lazy var hostPower = HostPower(host: self) { [weak self] in
+    @PerceptionIgnored lazy var hostPower = HostPower(host: self) { [weak self] in
         guard let self, statusTimer != nil else { return }
         startStatusPoll()
     }
@@ -222,21 +222,21 @@ final class EmulatorController {
     /// The status block, read now; nil before the helper's first hello.
     var status: SharedStatus? { process?.status }
     /// The session replaces this controller with a fresh helper (DeviceSessionHost.restart).
-    @ObservationIgnored var onRestartRequested: (() -> Void)?
+    @PerceptionIgnored var onRestartRequested: (() -> Void)?
     /// A restart asked for (onRestartRequested) won't happen: the view's free-form restart ends (C-4).
-    @ObservationIgnored var onRestartRefused: (() -> Void)?
-    @ObservationIgnored var onStorageGenerationChanged: (() -> Void)?
+    @PerceptionIgnored var onRestartRefused: (() -> Void)?
+    @PerceptionIgnored var onStorageGenerationChanged: (() -> Void)?
     /// The active recording's audio (GuestAudioCapture).
-    @ObservationIgnored var audioSink: ((LinkEvent) -> Void)?
-    @ObservationIgnored var statusTimer: Timer?
-    @ObservationIgnored var lastFrameSerial: UInt64 = 0
-    @ObservationIgnored var releasing = false
-    @ObservationIgnored var admittedStorage: StorageBootProof?
+    @PerceptionIgnored var audioSink: ((LinkEvent) -> Void)?
+    @PerceptionIgnored var statusTimer: Timer?
+    @PerceptionIgnored var lastFrameSerial: UInt64 = 0
+    @PerceptionIgnored var releasing = false
+    @PerceptionIgnored var admittedStorage: StorageBootProof?
     /// What this helper's boot was built with (BootSettings); Start after Shut Down compares it with the next.
-    @ObservationIgnored var bootSettings: BootSettings?
+    @PerceptionIgnored var bootSettings: BootSettings?
 
     // MARK: - Boot
-    @ObservationIgnored var fileWatch: DeviceFileWatch?
+    @PerceptionIgnored var fileWatch: DeviceFileWatch?
     /// Something deleted, renamed or replaced the device's files while its helper
     /// had them open: the guest runs on dead inodes until Stop, which then quits
     /// without flushing into them.
@@ -244,45 +244,45 @@ final class EmulatorController {
 
     // MARK: - Boot deadline
     /// The boot deadline, recovery mode, a boot that can't be built and the helper's death (BootWatch).
-    @ObservationIgnored private(set) lazy var bootWatch = BootWatch(host: self)
+    @PerceptionIgnored private(set) lazy var bootWatch = BootWatch(host: self)
     /// The guest's zone and region follow the Mac's (TimeZoneSync).
-    @ObservationIgnored lazy var timeZone = TimeZoneSync(host: self)
+    @PerceptionIgnored lazy var timeZone = TimeZoneSync(host: self)
 
     // MARK: - Liveness
     /// When the guest last painted a new frame. Advanced by the status poll on
     /// every new ring serial; the signal behind `booting → running`.
-    @ObservationIgnored var lastFrameAdvance = Date.distantPast
+    @PerceptionIgnored var lastFrameAdvance = Date.distantPast
     /// The agent's ping (its ops), until it restarts.
     let agentCache = GuestAgentCache()
-    @ObservationIgnored var lastAgentStatusCheck = Date.distantPast
+    @PerceptionIgnored var lastAgentStatusCheck = Date.distantPast
     var agentStatus = 0
     /// Set by the status poll: when the agent last went stale (2), nil while it answers.
-    @ObservationIgnored var agentStaleSince: Date?
+    @PerceptionIgnored var agentStaleSince: Date?
     /// When lockdown first answered this boot.
-    @ObservationIgnored var reachableSince: Date?
+    @PerceptionIgnored var reachableSince: Date?
     /// This boot ends in Setup, not the Home screen: iOS 5 or later on an overlay that hasn't finished it.
     var expectsSetup = false
     var inRecovery = false
 
     // MARK: - Input
     /// The hardware buttons, shake, tilt, pasting and typing (DeviceInput); the keyboard is KeyboardInput.
-    @ObservationIgnored private(set) lazy var input = DeviceInput(host: self, settings: settingsFile)
+    @PerceptionIgnored private(set) lazy var input = DeviceInput(host: self, settings: settingsFile)
     var compassHeading: Int?
     /// The quarter turns and auto-rotation with the guest (DeviceRotation).
-    @ObservationIgnored private(set) lazy var rotation = DeviceRotation(
+    @PerceptionIgnored private(set) lazy var rotation = DeviceRotation(
         host: self,
         settings: settingsFile,
         setsAccelerometer: profile.orientationSource == .springBoard
     )
     /// The fake network's settings and the running modem (CarrierModem).
-    @ObservationIgnored private(set) lazy var carrier = CarrierModem(
+    @PerceptionIgnored private(set) lazy var carrier = CarrierModem(
         hasCellular: profile.hasCellular,
         settings: settingsFile,
         scope: bootScope
     ) { [weak self] in self?.link }
 
     /// Device ▸ Tweaks… (DeviceTweaks): applied by the foreground watch, the clock at each boot.
-    @ObservationIgnored private(set) lazy var tweaks = DeviceTweaks(
+    @PerceptionIgnored private(set) lazy var tweaks = DeviceTweaks(
         settings: settingsFile,
         version: iosVersion,
         guestTools: hasGuestTools,
@@ -291,19 +291,19 @@ final class EmulatorController {
     )
 
     /// Device ▸ Accessibility: what the guest last said is on (nil: not read this boot).
-    @ObservationIgnored var accessibilityOn: Set<AccessibilityFeature>?
+    @PerceptionIgnored var accessibilityOn: Set<AccessibilityFeature>?
 
     // MARK: - Options
     /// Attach to Local Network, the debug port and the boot arguments (DeviceOptions).
-    @ObservationIgnored private(set) lazy var options = DeviceOptions(settings: settingsFile, board: instance.board) {
+    @PerceptionIgnored private(set) lazy var options = DeviceOptions(settings: settingsFile, board: instance.board) {
         [weak self] in self?.link
     }
     /// This boot's offer and its verdict (GuestPackageWatch).
-    @ObservationIgnored private(set) lazy var guestPackage = GuestPackageWatch(host: self, stateDirectory: stateDir)
+    @PerceptionIgnored private(set) lazy var guestPackage = GuestPackageWatch(host: self, stateDirectory: stateDir)
 
     // MARK: - Keyboard passthrough
     /// Keyboard passthrough and Connect Hardware Keyboard (KeyboardInput), per device.
-    @ObservationIgnored private(set) lazy var keyboard = KeyboardInput(
+    @PerceptionIgnored private(set) lazy var keyboard = KeyboardInput(
         settings: settingsFile,
         canToggleHardwareKeyboard: profile.canToggleHardwareKeyboard,
         control: { [weak self] request, done in self?.control(request, done) },
@@ -313,17 +313,17 @@ final class EmulatorController {
 
     // MARK: - Machine control
     /// Restart and Power On in place (BootCycle).
-    @ObservationIgnored private(set) lazy var cycle = BootCycle(host: self)
+    @PerceptionIgnored private(set) lazy var cycle = BootCycle(host: self)
     /// Stop, Force Stop and Shut Down (ShutdownLadder): Stop is a hard halt, never a guest shutdown.
-    @ObservationIgnored private(set) lazy var ladder = ShutdownLadder(host: self)
+    @PerceptionIgnored private(set) lazy var ladder = ShutdownLadder(host: self)
     /// Erase All Content and Settings (DeviceErase).
-    @ObservationIgnored lazy var eraser = DeviceErase(host: self)
+    @PerceptionIgnored lazy var eraser = DeviceErase(host: self)
 
     // MARK: - App management
     /// Reaching the device's services, installs and media imports, restarting the Home screen (DeviceApps).
-    @ObservationIgnored private(set) lazy var apps = DeviceApps(host: self)
+    @PerceptionIgnored private(set) lazy var apps = DeviceApps(host: self)
     /// The once-per-boot activation verdict (ActivationCheck).
-    @ObservationIgnored private lazy var activation = ActivationCheck(
+    @PerceptionIgnored private lazy var activation = ActivationCheck(
         host: self,
         services: self,
         recovery: recovery,

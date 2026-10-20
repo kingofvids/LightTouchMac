@@ -3,14 +3,14 @@
 // dots, the touches every firmware shows.
 
 import Foundation
-import Observation
+import Perception
 
-@Observable public final class TweaksPanelModel {
+@Perceptible public final class TweaksPanelModel {
     public private(set) var tweaks: DeviceTweaks
     /// The running session's guest services; nil while the device is stopped.
-    @ObservationIgnored private var guest: GuestServices?
+    @PerceptionIgnored private var guest: GuestServices?
     /// Show Finger Dots, the window's (MainWindowController's toggle); nil where there's no window to show them.
-    @ObservationIgnored public var fingerDots: (get: () -> Bool, set: (Bool) -> Void)?
+    @PerceptionIgnored public var fingerDots: (get: () -> Bool, set: (Bool) -> Void)?
 
     public init(tweaks: DeviceTweaks, guest: GuestServices?) {
         self.tweaks = tweaks

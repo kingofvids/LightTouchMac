@@ -3,7 +3,7 @@
 
 import Foundation
 import HostRuntime
-import Observation
+import Perception
 
 /// What the panel drives: the running device's modem.
 @MainActor public protocol CarrierBackend: AnyObject {
@@ -13,14 +13,14 @@ import Observation
     func modemStatus(_ done: @escaping @MainActor (ModemStatus?) -> Void)
 }
 
-@MainActor @Observable public final class CarrierPanelModel {
+@MainActor @Perceptible public final class CarrierPanelModel {
     public struct SentSMS: Identifiable, Equatable {
         public let id: Int
         public let number: String
         public let text: String
     }
 
-    @ObservationIgnored private var backend: CarrierBackend
+    @PerceptionIgnored private var backend: CarrierBackend
     public var settings: CarrierSettings
     /// The network fields as typed; applied (validated) with Apply.
     public var carrierName: String
@@ -33,13 +33,13 @@ import Observation
     public private(set) var sent: [SentSMS] = []
     /// The last thing the panel or the modem refused.
     public private(set) var message: String?
-    @ObservationIgnored private var lastMOCount: Int?
+    @PerceptionIgnored private var lastMOCount: Int?
     /// The GPS position as typed, applied with Set.
     public var latitude: String
     public var longitude: String
     /// Walking: the receiver moves at walkSpeed around a walkRadius circle through the set location, a step per poll.
     public private(set) var walking = false
-    @ObservationIgnored private var walkAngle = 0.0
+    @PerceptionIgnored private var walkAngle = 0.0
     public static let walkSpeed = 1.4, walkRadius = 50.0
 
     public init(backend: CarrierBackend) {

@@ -1,10 +1,10 @@
 import Foundation
-import Observation
+import Perception
 
 /// Owns work which must never outlive one boot. The halt transaction itself
 /// belongs to the controller, so retiring a boot cannot cancel its cleanup.
 /// Observable: which boot is current (`id`, `retired`), for what follows each boot (AppChangeWatch).
-@MainActor @Observable
+@MainActor @Perceptible
 public final class BootSessionScope {
     public init() {}
     public enum Work: CaseIterable {
@@ -12,10 +12,10 @@ public final class BootSessionScope {
         case guestPackage, activation, staging, powerOn, reset, crashReports
     }
     public private(set) var id = UUID()
-    @ObservationIgnored public private(set) var generation = 0
+    @PerceptionIgnored public private(set) var generation = 0
     public private(set) var retired = false
-    @ObservationIgnored private var tasks: [Work: Task<Void, Never>] = [:]
-    @ObservationIgnored private var observers: [String: NSObjectProtocol] = [:]
+    @PerceptionIgnored private var tasks: [Work: Task<Void, Never>] = [:]
+    @PerceptionIgnored private var observers: [String: NSObjectProtocol] = [:]
 
     public subscript(work: Work) -> Task<Void, Never>? {
         get { tasks[work] }

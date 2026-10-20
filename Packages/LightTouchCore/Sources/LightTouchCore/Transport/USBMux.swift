@@ -11,12 +11,12 @@
 // the next launch — is reliably avoided.
 
 import Foundation
-import Observation
+import Perception
 import Subprocess
 import System
 
 /// Observable: `session` is whether app management has a daemon (the controller's canManageApps).
-@MainActor @Observable public final class USBMux {
+@MainActor @Perceptible public final class USBMux {
     /// `binary`: another daemon (tests); nil, the bundled one.
     public init(session: Session? = nil, binary: String? = nil, onUnexpectedExit: (() -> Void)? = nil) {
         self.session = session

@@ -1,3 +1,4 @@
+import Perception
 import Cocoa
 import LightTouchCore
 import SwiftUI
@@ -150,7 +151,7 @@ final class CaptureStatusView: NSView {
     }
 }
 
-@Observable
+@Perceptible
 private final class CaptureBannerState {
     var title = ""
     var detail = ""
@@ -180,12 +181,14 @@ private struct CaptureBanner: View {
     }
 
     var body: some View {
+        WithPerceptionTracking {
         ZStack {
             if state.isPresented {
                 banner.transition(.opacity)
             }
         }
         .animation(reduceMotion ? nil : .easeOut(duration: 0.2), value: state.isPresented)
+    }
     }
 
     private var banner: some View {

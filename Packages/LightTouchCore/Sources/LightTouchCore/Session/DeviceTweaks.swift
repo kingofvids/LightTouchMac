@@ -4,10 +4,10 @@
 import Foundation
 import HostRuntime
 import HostServiceWire
-import Observation
+import Perception
 
-@Observable public final class DeviceTweaks {
-    @ObservationIgnored private let settingsFile: DeviceSettingsFile
+@Perceptible public final class DeviceTweaks {
+    @PerceptionIgnored private let settingsFile: DeviceSettingsFile
     /// The device's firmware version ("4.2.1").
     public let version: String
     /// The board runs Light Touch's guest tools (the agent): no iPhone OS 1.x.
@@ -64,7 +64,7 @@ import Observation
     // MARK: Applying
 
     /// What this boot last sent; nil until its first apply.
-    @ObservationIgnored private var applied: TweakSettings.Applied?
+    @PerceptionIgnored private var applied: TweakSettings.Applied?
     /// The tweaks the running guest's agent can't apply (an older guest package), for the panel.
     public private(set) var needsNewerGuestTools: [Tweak] = []
     /// The last apply's failure, for the panel.
@@ -81,7 +81,7 @@ import Observation
     // MARK: Developer Settings
 
     /// This boot mounted (or tried) the Developer Disk Image.
-    @ObservationIgnored private var mountedImage = false
+    @PerceptionIgnored private var mountedImage = false
 
     /// Mounts the version's Developer Disk Image once per boot while Developer Settings is on. A mounted image stays
     /// until the device restarts: the mounter of these versions has no unmount.

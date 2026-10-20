@@ -13,7 +13,7 @@ import PackageDescription
 
 let package = Package(
     name: "FirmwareKit",
-    platforms: [.macOS(.v13)],
+    platforms: [.macOS(.v12)],
     products: [
         .library(name: "FirmwareKit", targets: ["FirmwareKit"]),
         .library(name: "FirmwareSchema", type: .static, targets: ["FirmwareSchema"]),

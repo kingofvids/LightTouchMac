@@ -13,7 +13,7 @@
 import DeviceRuntime
 import Foundation
 import HostRuntime
-import Observation
+import Perception
 
 /// What Stop and Shut Down read and do on the session.
 public protocol ShutdownHost: AnyObject {
@@ -43,7 +43,7 @@ public enum ShutdownOutcome: Equatable {
     case timedOut
 }
 
-@Observable public final class ShutdownLadder {
+@Perceptible public final class ShutdownLadder {
     public struct Budgets {
         public init() {}
         /// SIGTERM to the kill.

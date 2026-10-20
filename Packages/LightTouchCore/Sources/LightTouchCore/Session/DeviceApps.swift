@@ -6,7 +6,7 @@ import Foundation
 import HostRuntime
 import HostServiceClient
 import HostServiceWire
-import Observation
+import Perception
 
 /// What app management reads of the session.
 public protocol AppsHost: AnyObject {
@@ -28,8 +28,8 @@ public protocol AppsHost: AnyObject {
     var guest: GuestServices { get }
 }
 
-@Observable public final class DeviceApps {
-    @ObservationIgnored private unowned let host: AppsHost
+@Perceptible public final class DeviceApps {
+    @PerceptionIgnored private unowned let host: AppsHost
     public init(host: AppsHost) { self.host = host }
 
     /// usbmuxd is up and the storage holds: the host side of app management.

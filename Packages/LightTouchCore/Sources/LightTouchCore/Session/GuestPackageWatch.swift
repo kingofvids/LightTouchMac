@@ -4,7 +4,7 @@
 import DeviceRuntime
 import Foundation
 import HostRuntime
-import Observation
+import Perception
 
 /// What the guest-package watch reads of the session.
 public protocol GuestPackageHost: AnyObject {
@@ -19,11 +19,11 @@ public protocol GuestPackageHost: AnyObject {
     var deviceReachable: Bool? { get }
 }
 
-@Observable public final class GuestPackageWatch {
-    @ObservationIgnored private unowned let host: GuestPackageHost
-    @ObservationIgnored private let stateDirectory: URL
+@Perceptible public final class GuestPackageWatch {
+    @PerceptionIgnored private unowned let host: GuestPackageHost
+    @PerceptionIgnored private let stateDirectory: URL
     /// The bundled itpack for an arch (GuestPackage.bundledPack).
-    @ObservationIgnored private let pack: (String) -> URL?
+    @PerceptionIgnored private let pack: (String) -> URL?
 
     public init(
         host: GuestPackageHost,
@@ -42,7 +42,7 @@ public protocol GuestPackageHost: AnyObject {
     /// The loader's report as the watch judged it: the "Guest tools" line.
     public private(set) var status: GuestPackage.Status = .unknown
     /// The watch's sampling interval (shorter in tests).
-    @ObservationIgnored var interval: Duration = .seconds(1)
+    @PerceptionIgnored var interval: Duration = .seconds(1)
 
     private var task: Task<Void, Never>? {
         get { host.bootScope[.guestPackage] }

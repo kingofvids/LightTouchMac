@@ -3,6 +3,7 @@
 // Network settings are the device's (EmulatorController.carrierSettings, applied at every boot); calls and SMS go
 // straight to the modem (qemu-ios ios-baseband's actions), and its state is polled once a second while visible.
 
+import Perception
 import Cocoa
 import CoreLocation
 import HostRuntime
@@ -13,11 +14,12 @@ import SwiftUI
 extension EmulatorController: CarrierBackend {}
 
 struct CarrierPanel: View {
-    @Bindable var model: CarrierPanelModel
+    @Perception.Bindable var model: CarrierPanelModel
     @State private var camera = MapCameraPosition.automatic
     @State private var macLocation = MacLocation()
 
     var body: some View {
+        WithPerceptionTracking {
         Form {
             Section {
                 TextField("Carrier", text: $model.carrierName)
@@ -153,6 +155,7 @@ struct CarrierPanel: View {
             }
             if model.walking { model.toggleWalk() }  // the walk steps with the poll: it ends with it
         }
+    }
     }
 }
 

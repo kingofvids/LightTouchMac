@@ -34,7 +34,7 @@ if [ "${LTM_OFFLINE:-0}" = 1 ]; then SOURCE_ARGS+=(--offline); fi
 
 # Preserve the former deps12 source versions and build options, targeting the
 # application's supported macOS 14 baseline. Never discover Homebrew libraries.
-export MACOSX_DEPLOYMENT_TARGET=14.0
+export MACOSX_DEPLOYMENT_TARGET=12.0
 MIN="-mmacosx-version-min=$MACOSX_DEPLOYMENT_TARGET"
 export CFLAGS="$ARCH_FLAG$MIN -O2" CXXFLAGS="$ARCH_FLAG$MIN -O2" LDFLAGS="$ARCH_FLAG$MIN"
 export PKG_CONFIG_LIBDIR="$PREFIX/lib/pkgconfig" PKG_CONFIG_PATH=

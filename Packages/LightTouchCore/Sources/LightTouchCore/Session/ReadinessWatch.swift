@@ -5,7 +5,7 @@ import DeviceRuntime
 import Foundation
 import HostRuntime
 import HostServiceWire
-import Observation
+import Perception
 
 /// What the readiness watch reads and does on the session.
 public protocol ReadinessHost: AnyObject {
@@ -31,13 +31,13 @@ public protocol ReadinessHost: AnyObject {
     func readyForInput()
 }
 
-@Observable public final class ReadinessWatch {
+@Perceptible public final class ReadinessWatch {
     private unowned let host: ReadinessHost
     private let notices: DeviceNotices
     /// Fired with the old value when `preparingDevice` is set (the startup clock).
-    @ObservationIgnored public var onPreparingChange: ((Bool) -> Void)?
+    @PerceptionIgnored public var onPreparingChange: ((Bool) -> Void)?
     /// The board's boot budget (shorter in tests).
-    @ObservationIgnored var budget: Duration
+    @PerceptionIgnored var budget: Duration
 
     public init(host: ReadinessHost, notices: DeviceNotices) {
         self.host = host
@@ -74,7 +74,7 @@ public protocol ReadinessHost: AnyObject {
         set { host.bootScope[.readiness] = newValue }
     }
     /// Bumped by each start(): a watch clears `preparingDevice` as it ends unless a later start() owns it.
-    @ObservationIgnored private var run = 0
+    @PerceptionIgnored private var run = 0
     public func cancel() { task?.cancel() }
     /// Waits for this boot's watch (a restart lets it finish first).
     public var current: Task<Void, Never>? { task }

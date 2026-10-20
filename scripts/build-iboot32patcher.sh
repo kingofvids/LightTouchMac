@@ -30,11 +30,11 @@ tar -xzf "$SRC_DIR/$ARCHIVE" -C "$OUT" --strip-components=1
 PATCH="$HERE/build-support/patches/iBoot32Patcher-ltm.patch"
 (cd "$OUT" && patch -p1 --quiet < "$PATCH")
 cp "$PATCH" "$OUT/"
-(cd "$OUT" && make CC=/usr/bin/clang CFLAGS="-O2 $ARCH_FLAGS-mmacosx-version-min=14.0 -Wno-multichar -Wno-int-conversion" > "$OUT/make.log" 2>&1)
-"$HERE/scripts/ltm-build" check-macho --no-weak-imports --minos 14.0 "$OUT/iBoot32Patcher"
+(cd "$OUT" && make CC=/usr/bin/clang CFLAGS="-O2 $ARCH_FLAGS-mmacosx-version-min=12.0 -Wno-multichar -Wno-int-conversion" > "$OUT/make.log" 2>&1)
+"$HERE/scripts/ltm-build" check-macho --no-weak-imports --minos 12.0 "$OUT/iBoot32Patcher"
 printf '%s\n' "iBoot32Patcher $COMMIT: $URL" "License: $LICENSE (LICENSE alongside)" \
     "Modified: $(basename "$PATCH") (alongside) applied to that source." \
-    "Built by scripts/build-iboot32patcher.sh: make CC=clang CFLAGS='-O2 $ARCH_FLAGS-mmacosx-version-min=14.0'" \
+    "Built by scripts/build-iboot32patcher.sh: make CC=clang CFLAGS='-O2 $ARCH_FLAGS-mmacosx-version-min=12.0'" \
     "firmwarekit runs it as a separate process for the iPad's real-iBoot boot chain (--rsa --debug -b boot-args)." \
     > "$OUT/SOURCE.txt"
 sha() { shasum -a 256 "$1" | cut -d' ' -f1; }

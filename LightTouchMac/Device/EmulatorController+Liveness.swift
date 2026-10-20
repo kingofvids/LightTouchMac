@@ -5,7 +5,7 @@ import HostRuntime
 import HostServiceClient
 import HostServiceWire
 import LightTouchCore
-import Observation
+import Perception
 
 extension EmulatorController {
     private func noteFrameAdvanced() {

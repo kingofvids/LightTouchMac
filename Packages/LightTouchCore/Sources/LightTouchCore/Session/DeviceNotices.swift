@@ -4,7 +4,7 @@
 import DeviceRuntime
 import Foundation
 import HostRuntime
-import Observation
+import Perception
 
 /// This device's settings.plist (DeviceSettings), read once and written on every change. Every file opened on one
 /// device directory shares one copy while any is open (a session's, a stopped device's menu, an erase's), so none
@@ -20,10 +20,10 @@ public final class DeviceSettingsFile {
     public var value: DeviceSettings { store.value }
     public func change(_ change: (inout DeviceSettings) -> Void) { store.change(change) }
 
-    @Observable final class Store {
+    @Perceptible final class Store {
         let directory: URL
         init(directory: URL) { self.directory = directory }
-        @ObservationIgnored private lazy var stored = DeviceSettings.load(directory)
+        @PerceptionIgnored private lazy var stored = DeviceSettings.load(directory)
         var value: DeviceSettings {
             access(keyPath: \.value)
             return stored

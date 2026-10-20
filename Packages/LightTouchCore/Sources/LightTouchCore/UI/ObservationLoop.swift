@@ -1,12 +1,12 @@
-// Targeted updates from @Observable models (the session's controller and its components) for AppKit observers.
+// Targeted updates from @Perceptible models (the session's controller and its components) for AppKit observers.
 //
-// Observation's withObservationTracking fires once, on the first change to anything the tracked closure read; this
+// withPerceptionTracking (Observation's withObservationTracking on 14+) fires once, on the first change to anything the tracked closure read; this
 // re-arms it after every change, so an observer updates when what it shows changes and not on every other tick.
 // AppKit only tracks Observation by itself from macOS 15 (opt-in, NSObservationTrackingEnabled) or 26 (default),
-// inside view and view-controller update methods; the app targets 14.4, so observers arm one of these instead.
+// inside view and view-controller update methods; the app targets macOS 12 (Perception forwards to Observation on 14+ and re-implements it below that), so observers arm one of these instead.
 
 import Foundation
-import Observation
+import Perception
 
 /// Reads `read` under observation tracking; when anything it read changes, calls `onChange` (on the main actor,
 /// after the change, coalescing changes made in the same turn) and reads again, re-arming for the next change.
@@ -35,7 +35,7 @@ public final class ObservationLoop {
 
     private func arm() {
         let armed = generation
-        withObservationTracking(read) { [weak self] in
+        withPerceptionTracking(read) { [weak self] in
             // Fired from the mutation's willSet: hop so `onChange` and the next read see the new value.
             Task { @MainActor [weak self] in
                 guard let self, armed == generation else { return }

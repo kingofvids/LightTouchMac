@@ -5,7 +5,7 @@ import DeviceRuntime
 import Foundation
 import HostRuntime
 import HostServiceWire
-import Observation
+import Perception
 
 /// What connection recovery and the activation check read and change on the session.
 public protocol ConnectionHost: AnyObject {
@@ -30,7 +30,7 @@ public protocol ConnectionHost: AnyObject {
 
 /// A transient installd transition is not a dead device. If repeated reads fail, reopen the management service
 /// through the independent guest agent. Never reboot the iPod or touch its applications to repair a connection.
-@Observable public final class ConnectionRecovery {
+@Perceptible public final class ConnectionRecovery {
     private unowned let host: ConnectionHost
     private let notices: DeviceNotices
     public init(host: ConnectionHost, notices: DeviceNotices) {

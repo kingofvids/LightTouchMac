@@ -1,3 +1,4 @@
+import Perception
 import Cocoa
 import FirmwareSchema
 import LightTouchCore
@@ -10,6 +11,7 @@ struct StorageSettingsView: View {
     let model: StorageUsage
 
     var body: some View {
+        WithPerceptionTracking {
         let usage = model.usage
         Form {
             Section("Devices") {
@@ -66,6 +68,7 @@ struct StorageSettingsView: View {
             }
         }
     }
+    }
 
     private func size(_ bytes: Int64) -> String { ByteCountFormatter.string(fromByteCount: bytes, countStyle: .file) }
 }
@@ -90,7 +93,7 @@ private struct StorageRow: View {
 
 /// What Storage shows, measured off the main thread; measured again when its pane is shown, and while it is shown when
 /// the devices, their sessions or the firmware jobs change (which also asks canDelete again).
-@Observable final class StorageUsage {
+@Perceptible final class StorageUsage {
     nonisolated struct DeviceUsage: Sendable {
         let instance: DeviceInstance
         let base: Int64, data: Int64, snapshot: Int64
@@ -106,15 +109,15 @@ private struct StorageRow: View {
     }
 
     private(set) var usage = Usage()
-    @ObservationIgnored let catalog: FirmwareCatalog
-    @ObservationIgnored let jobs: FirmwareJobs
+    @PerceptionIgnored let catalog: FirmwareCatalog
+    @PerceptionIgnored let jobs: FirmwareJobs
     /// MainWindowController's Delete Device for one record (its confirmation included), and whether it may run now.
-    @ObservationIgnored let delete: (DeviceInstance) -> Void
-    @ObservationIgnored let canDelete: (DeviceInstance) -> Bool
-    @ObservationIgnored private var loading: Task<Void, Never>?
-    @ObservationIgnored private var observers: [NSObjectProtocol] = []
+    @PerceptionIgnored let delete: (DeviceInstance) -> Void
+    @PerceptionIgnored let canDelete: (DeviceInstance) -> Bool
+    @PerceptionIgnored private var loading: Task<Void, Never>?
+    @PerceptionIgnored private var observers: [NSObjectProtocol] = []
     /// Whether Storage is on screen: changes measure again only then (a download changes its job many times a second).
-    @ObservationIgnored var isShown: () -> Bool = { false }
+    @PerceptionIgnored var isShown: () -> Bool = { false }
 
     init(
         catalog: FirmwareCatalog = .bundled,

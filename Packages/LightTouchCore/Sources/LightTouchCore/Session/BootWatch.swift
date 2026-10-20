@@ -4,7 +4,7 @@
 import DeviceRuntime
 import Foundation
 import HostRuntime
-import Observation
+import Perception
 
 /// What the boot watch reads and changes on the session.
 public protocol BootWatchHost: AnyObject {
@@ -42,7 +42,7 @@ public enum BootEnd: Equatable {
     case helperGone
 }
 
-@Observable public final class BootWatch {
+@Perceptible public final class BootWatch {
     private unowned let host: BootWatchHost
     public init(host: BootWatchHost) { self.host = host }
 
@@ -68,7 +68,7 @@ public enum BootEnd: Equatable {
     /// Why the helper died, for the row and the dead overlay.
     public private(set) var deathReason: String?
     /// The board's boot budget (shorter in tests).
-    @ObservationIgnored lazy var budget: TimeInterval = host.profile.bootBudget
+    @PerceptionIgnored lazy var budget: TimeInterval = host.profile.bootBudget
     /// How long an aborted boot's helper gets to exit before it is killed.
     var haltBudget = ShutdownLadder.Budgets().halt
 

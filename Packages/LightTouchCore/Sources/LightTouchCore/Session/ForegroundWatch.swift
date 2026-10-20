@@ -4,7 +4,7 @@
 import DeviceRuntime
 import Foundation
 import HostRuntime
-import Observation
+import Perception
 
 /// What the foreground watch reads of the session and asks of the guest.
 public protocol ForegroundHost: AnyObject {
@@ -28,19 +28,19 @@ public protocol ForegroundHost: AnyObject {
     func applyTweaks(generation: Int) async throws
 }
 
-@Observable public final class ForegroundWatch {
-    @ObservationIgnored private unowned let host: ForegroundHost
+@Perceptible public final class ForegroundWatch {
+    @PerceptionIgnored private unowned let host: ForegroundHost
     public init(host: ForegroundHost) { self.host = host }
 
     /// The guest's front app; the window's subtitle while it runs.
     public private(set) var appName: String?
     /// Set when this boot shows Setup (5.x, Setup not yet done on this overlay): the watch feeds it frontmost and,
     /// once Setup is over, writes the overlay's mark and, with `liftsRestrict`, lifts slirp's restrict in place.
-    @ObservationIgnored public var setupGate: BootRecipe.SetupNetworkGate?
+    @PerceptionIgnored public var setupGate: BootRecipe.SetupNetworkGate?
     /// This boot came up with slirp restrict=on until Setup is over.
-    @ObservationIgnored public var liftsRestrict = true
+    @PerceptionIgnored public var liftsRestrict = true
     /// Between polls (shorter in tests).
-    @ObservationIgnored var interval: Duration = .seconds(3)
+    @PerceptionIgnored var interval: Duration = .seconds(3)
 
     private var task: Task<Void, Never>? {
         get { host.bootScope[.foreground] }

@@ -6,7 +6,7 @@ import PackageDescription
 
 let package = Package(
     name: "BuildTools",
-    platforms: [.macOS("14.4")],
+    platforms: [.macOS(.v12)],
     products: [.executable(name: "ltm-build", targets: ["ltm-build"])],
     dependencies: [
         .package(path: "../ReleaseChecks"),
