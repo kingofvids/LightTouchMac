@@ -12,6 +12,7 @@
 // taken as the Thumb push{..,lr} prologue nearest before it. The prologue's four bytes become `movs r0, #0; bx lr`.
 
 import Foundation
+import HostCompat
 
 public enum SandboxPatch {
     /// Return "allowed" at once, writing the decision the caller reads back. sb_evaluate(result, …) leaves its verdict
@@ -265,7 +266,7 @@ struct Image {
 
     func findCString(_ s: String) -> Int? {
         let needle = [UInt8]((s + "\0").utf8)
-        guard let r = bytes.firstRange(of: needle) else { return nil }
+        guard let r = bytes.hostFirstRange(of: needle) else { return nil }
         return r.lowerBound
     }
 

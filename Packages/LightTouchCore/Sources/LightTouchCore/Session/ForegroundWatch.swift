@@ -1,6 +1,7 @@
 // The guest's front app, every few seconds while the device answers: the window's subtitle, the web proxy's
 // changes reaching the guest, and the end of Setup on a boot whose networking waits for it.
 
+import HostCompat
 import DeviceRuntime
 import Foundation
 import HostRuntime
@@ -40,7 +41,7 @@ public protocol ForegroundHost: AnyObject {
     /// This boot came up with slirp restrict=on until Setup is over.
     @PerceptionIgnored public var liftsRestrict = true
     /// Between polls (shorter in tests).
-    @PerceptionIgnored var interval: Duration = .seconds(3)
+    @PerceptionIgnored var interval: HostDuration = .seconds(3)
 
     private var task: Task<Void, Never>? {
         get { host.bootScope[.foreground] }
@@ -97,7 +98,7 @@ public protocol ForegroundHost: AnyObject {
                         _ = setupGate?.observe(bundleID: nil, name: nil)  // a failed poll breaks the streak
                     }
                 }
-                do { try await Task.sleep(for: interval) } catch { return }
+                do { try await Task.hostSleep(for: interval) } catch { return }
             }
         }
     }

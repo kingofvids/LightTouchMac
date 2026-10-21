@@ -1,3 +1,4 @@
+import HostCompat
 import Cocoa
 import FirmwareSchema
 import HostRuntime
@@ -174,7 +175,7 @@ extension MainWindowController {
                 // Up to the boot's own budget for iOS to come up, then Shut Down, then the file system.
                 let deadline = Date().addingTimeInterval(entry.profile?.bootBudget ?? 240)
                 while Date() < deadline {
-                    try? await Task.sleep(for: .seconds(1))
+                    try? await Task.hostSleep(for: .seconds(1))
                     guard let self, let emulator = self.host.session(for: entry)?.emulator else { continue }
                     if emulator.isDead || emulator.isPoweredOff { return }
                     guard emulator.isRunning, emulator.canShutDown else { continue }

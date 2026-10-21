@@ -1,3 +1,4 @@
+import HostCompat
 import CryptoKit
 import FirmwareSchema
 import Foundation
@@ -199,8 +200,8 @@ public nonisolated final class PreparationJob: @unchecked Sendable {
             }
             let log = try FileDescriptor.open(request.log.path, .writeOnly)
             let task = Task.detached { [self] in await run(arguments, log: log) }
-            lock.withLock { self.task = task }
-            if lock.withLock({ cancelled }) { task.cancel() }
+            lock.hostWithLock { self.task = task }
+            if lock.hostWithLock({ cancelled }) { task.cancel() }
         } catch {
             finish(.failed("Couldn’t start preparing the device: \(error.localizedDescription)"))
         }
@@ -209,8 +210,8 @@ public nonisolated final class PreparationJob: @unchecked Sendable {
     /// SIGTERM, and SIGKILL if the preparer is still there after 5 s (the
     /// contract gives it 2). The staging directory goes when it exits.
     public func cancel() {
-        lock.withLock { cancelled = true }
-        lock.withLock { task }?.cancel()
+        lock.hostWithLock { cancelled = true }
+        lock.hostWithLock { task }?.cancel()
     }
 
     /// The preparer, its JSON Lines read as they come, its stderr into the log.
@@ -235,11 +236,11 @@ public nonisolated final class PreparationJob: @unchecked Sendable {
                 case .signaled(let signal): 128 + signal
                 }
         } catch {
-            if lock.withLock({ cancelled }) { return finish(.cancelled) }
+            if lock.hostWithLock({ cancelled }) { return finish(.cancelled) }
             return finish(.failed("Couldn’t start preparing the device: \(error.localizedDescription)"))
         }
-        if lock.withLock({ cancelled }) { return finish(.cancelled) }
-        switch lock.withLock({ outcome }) {
+        if lock.hostWithLock({ cancelled }) { return finish(.cancelled) }
+        switch lock.hostWithLock({ outcome }) {
         case .done(let lockName)? where status == 0:
             do { finish(.published(try publish(lock: lockName))) } catch {
                 finish(.failed("Couldn’t save the prepared device: \(error.localizedDescription)"))
@@ -259,11 +260,11 @@ public nonisolated final class PreparationJob: @unchecked Sendable {
     private func receive(_ line: Line?) {
         switch line {
         case .begin(let count, let seconds)?:
-            lock.withLock { steps = count }
+            lock.hostWithLock { steps = count }
             onEvent(.begin(seconds: seconds))
-        case .step(let index, let name)?: onEvent(.step(index, of: lock.withLock { steps }, name: name))
+        case .step(let index, let name)?: onEvent(.step(index, of: lock.hostWithLock { steps }, name: name))
         case .warning(let message)?: onEvent(.warning(message))
-        case .done?, .error?: lock.withLock { if outcome == nil { outcome = line } }
+        case .done?, .error?: lock.hostWithLock { if outcome == nil { outcome = line } }
         case .progress(let fraction, let detail)?: onEvent(.progress(fraction, detail: detail))
         case nil: break
         }

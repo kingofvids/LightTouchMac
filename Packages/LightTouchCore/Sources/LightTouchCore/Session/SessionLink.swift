@@ -1,6 +1,7 @@
 // What a device session drives: its helper process and that helper's link. DeviceProcess and DeviceLink in the
 // app; recorders in LightTouchCoreTests, so the session's state machines run without a helper.
 
+import HostCompat
 import DeviceRuntime
 import Foundation
 import HostRuntime
@@ -68,7 +69,7 @@ public final class WorkerRetirement {
             signal.yield(true)
         }
         let timer = Task {
-            try? await Task.sleep(for: .seconds(budget))
+            try? await Task.hostSleep(for: .seconds(budget))
             signal.yield(false)
         }
         var first = done.makeAsyncIterator()

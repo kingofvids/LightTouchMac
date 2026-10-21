@@ -7,7 +7,7 @@ import PackageDescription
 let package = Package(
     name: "SubprocessCompat",
     platforms: [.macOS(.v12)],
-    products: [.library(name: "Subprocess", targets: ["Subprocess"])],
+    products: [.library(name: "Subprocess", type: .static, targets: ["Subprocess"])],
     targets: [
         .target(name: "Subprocess")
     ],

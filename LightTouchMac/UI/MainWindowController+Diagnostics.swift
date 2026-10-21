@@ -33,7 +33,7 @@ extension MainWindowController {
     /// ID and seed, and its lock's ECID, IMEI, MAC and UID options.
     static func identitySecrets(_ instance: DeviceInstance, lock: DeviceLock?) -> [String] {
         [instance.identity?.udid, instance.identity?.dieID, instance.identity?.seed].compactMap { $0 }
-            + (lock?.machine ?? [:]).filter { $0.key.contains(/ecid|imei|iccid|meid|serial|mac|uid/) }
+            + (lock?.machine ?? [:]).filter { entry in ["ecid", "imei", "iccid", "meid", "serial", "mac", "uid"].contains { entry.key.contains($0) } }
             .compactMap(\.value.optionText)
     }
 

@@ -10,6 +10,7 @@
 // is the only way a leaked usbmuxd — one holding the client socket and breaking
 // the next launch — is reliably avoided.
 
+import HostCompat
 import Foundation
 import Perception
 import Subprocess
@@ -221,7 +222,7 @@ import System
                     // gates run()'s return, so a plain long sleep would let a
                     // dead daemon look alive forever (the empty-catch bug).
                     while !Task.isCancelled {
-                        try await Task.sleep(for: .seconds(1))
+                        try await Task.hostSleep(for: .seconds(1))
                         if !Self.isRunning(pid) { break }
                     }
                 }

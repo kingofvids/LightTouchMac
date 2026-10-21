@@ -2,6 +2,7 @@
 // returns a Fit; the recipes decide what a misfit means for their board.
 
 import Foundation
+import HostCompat
 
 extension FitCheck {
     /// The C string `s` as it sits in a binary's string section: NUL on both sides.
@@ -485,7 +486,7 @@ extension FitCheck {
                 }
                 proof.append("macro context: \(slots) unnamed dispatch slots, named by the stock exports at run time")
             }
-            let known = Set(table.matches(of: /(?m)^GLES_FN\(\w+,\s*(\w+),/).map { String($0.1) })
+            let known = Set(table.hostMatches(#"(?m)^GLES_FN\(\w+,\s*(\w+),"#).map { $0[1] })
             let unknown = fields.filter { !known.contains($0) }
             guard unknown.isEmpty else {
                 return Fit(

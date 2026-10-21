@@ -1,6 +1,7 @@
 // The device's input besides the keyboard (KeyboardInput): the hardware buttons, shake, the chassis tilt and its
 // motion pose, pasting and composed text.
 
+import HostCompat
 import DeviceRuntime
 import Foundation
 import HostRuntime
@@ -77,7 +78,7 @@ public protocol InputHost: AnyObject {
     /// in order; where the agent can't (no it_typein, no field), the US keys that type it, one by one.
     @PerceptionIgnored private var typing: Task<Void, Never>?
     /// The gap between typed characters.
-    @PerceptionIgnored var keyGap: Duration = .milliseconds(15)
+    @PerceptionIgnored var keyGap: HostDuration = .milliseconds(15)
     public func typeText(_ text: String, shiftHeld: Bool) {
         guard !text.isEmpty, host.keyboardInputEnabled, host.acceptsInput, !host.isSleeping else { return }
         let previous = typing
@@ -92,7 +93,7 @@ public protocol InputHost: AnyObject {
                 host.helperLink?.send(.key(macKeyCode: Int(code), down: true))
                 host.helperLink?.send(.key(macKeyCode: Int(code), down: false))
                 if pressShift { host.helperLink?.send(.key(macKeyCode: 56, down: false)) }
-                try? await Task.sleep(for: keyGap)
+                try? await Task.hostSleep(for: keyGap)
             }
         }
     }

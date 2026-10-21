@@ -1,3 +1,4 @@
+import HostCompat
 import Perception
 import Cocoa
 import LightTouchCore
@@ -26,7 +27,7 @@ final class CaptureStatusView: NSView {
     private var presentationID = UUID()
     private var dismissesAutomatically = false
     /// How long a capture banner stays up unhovered (check-capture-status holds it up while it removes files).
-    static var autoDismissal: Duration = .seconds(5)
+    static var autoDismissal: HostDuration = .seconds(5)
     var fileURL: URL? { state.fileURL }
     var onPrimary: (() -> Void)?
     /// The capture banner's text button (showCapture's `link`).
@@ -126,7 +127,7 @@ final class CaptureStatusView: NSView {
         guard dismissesAutomatically, !isHidden else { return }
         dismissal?.cancel()
         dismissal = Task { [weak self] in
-            do { try await Task.sleep(for: Self.autoDismissal) } catch { return }
+            do { try await Task.hostSleep(for: Self.autoDismissal) } catch { return }
             self?.dismissBanner()
         }
     }
@@ -141,7 +142,7 @@ final class CaptureStatusView: NSView {
         dismissalAnimation?.cancel()
         dismissalAnimation = Task { [weak self] in
             if !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion {
-                do { try await Task.sleep(for: .milliseconds(200)) } catch { return }
+                do { try await Task.hostSleep(for: .milliseconds(200)) } catch { return }
             }
             guard let self, self.presentationID == id else { return }
             self.onDismiss?()
@@ -278,7 +279,7 @@ private struct CaptureBannerThumbnail: View {
     let _ = {
         state.title = "Screenshot saved"
         state.image = NSImage(named: "gradient")
-        state.fileURL = URL(filePath: "/tmp/Preview.png")
+        state.fileURL = URL(fileURLWithPath: "/tmp/Preview.png")
         state.dismissible = true
         state.isPresented = true
     }()

@@ -9,6 +9,7 @@
 // older SpringBoard versions publish no notification. The session itself runs in the services helper
 // (LightTouchServices/Engine/NotificationEngine.swift); this is the app's watcher that keeps one open.
 
+import HostCompat
 import Foundation
 import HostServiceWire
 
@@ -60,13 +61,13 @@ public final class NotificationProxy {
             // sidebar quietly stale for the rest of the session.
             while !Task.isCancelled {
                 guard await attachAllowed() else {
-                    do { try await Task.sleep(for: .seconds(1)) } catch { break }
+                    do { try await Task.hostSleep(for: .seconds(1)) } catch { break }
                     continue
                 }
                 let ok = await observe(endpoint, attachAllowed, onChange)
                 // A failed attach usually means the guest is still booting;
                 // a successful session that ended means the link dropped.
-                do { try await Task.sleep(for: .seconds(ok ? 2 : 10)) } catch { break }
+                do { try await Task.hostSleep(for: .seconds(ok ? 2 : 10)) } catch { break }
             }
         }
     }

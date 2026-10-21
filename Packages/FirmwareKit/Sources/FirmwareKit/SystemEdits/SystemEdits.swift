@@ -24,6 +24,7 @@
 
 public import FirmwareSchema
 import Foundation
+import HostCompat
 
 public enum SystemEdits {
     /// The recipe options SystemEdits reads (FirmwareEntry.Recipe.options), plus bake's switches.
@@ -655,7 +656,7 @@ public enum SystemEdits {
             return "no __GLIFunctionDispatchRec @encode in the shared cache: the shim will read OpenGLES's trampolines"
         }
         let names = (try? String(contentsOf: helpers.appendingPathComponent(Helpers.glesNames), encoding: .utf8)) ?? ""
-        let known = Set(names.matches(of: /(?m)^GLES_FN\(\w+,\s*(\w+),/).map { String($0.1) })
+        let known = Set(names.hostMatches(#"(?m)^GLES_FN\(\w+,\s*(\w+),"#).map { $0[1] })
         let unknown = have.filter { !known.contains($0) }
         return "GLI dispatch: \(have.count) slots, \(unknown.count) unknown to the name table"
             + (unknown.isEmpty ? "" : " (\(unknown.prefix(8).joined(separator: ", ")))")

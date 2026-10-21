@@ -1,3 +1,4 @@
+import HostCompat
 import Foundation
 
 /// A caller-requested clean shutdown, separate from GUI Stop/hard halt.
@@ -69,8 +70,8 @@ import Foundation
         guard id != 0, VirtualInputEvent.valid(events), timeout.isFinite, timeout > 0, timeout <= 3600 else {
             throw Failure.invalidGesture
         }
-        let clock = ContinuousClock()
-        let deadline = ContinuousClock.now + .seconds(timeout)
+        let clock = HostContinuousClock()
+        let deadline = HostContinuousClock.now + .seconds(timeout)
         guard case .ok(true) = try await request(.inputSequence(id: id, events: events)) else {
             throw Failure.refused
         }
@@ -91,7 +92,7 @@ import Foundation
                     guard case .ok(true) = try await request(.usbConnection(false)) else { throw Failure.refused }
                     unplugged = true
                 }
-                try await Task.sleep(for: .milliseconds(100))
+                try await Task.hostSleep(for: .milliseconds(100))
             }
             throw Failure.timedOut
         } catch {

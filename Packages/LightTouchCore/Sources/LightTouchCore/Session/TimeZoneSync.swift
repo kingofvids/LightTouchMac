@@ -8,6 +8,7 @@
 // restore's Pacific zone until this lands (smoke #58). The guest's clock
 // itself is UTC from the RTC model; only the zone needs the host's help.
 
+import HostCompat
 import Foundation
 import HostRuntime
 import HostServiceWire
@@ -31,7 +32,7 @@ public final class TimeZoneSync {
     public init(host: TimeZoneHost) { self.host = host }
 
     /// Between tries while the device isn't ready or a try fails (shorter in tests).
-    var retryInterval: Duration = .seconds(5)
+    var retryInterval: HostDuration = .seconds(5)
     private var scope = 0
     private var task: Task<Void, Never>? {
         get { host.bootScope[.timeZone] }
@@ -104,7 +105,7 @@ public final class TimeZoneSync {
                     return
                 } catch {}
             }
-            try? await Task.sleep(for: retryInterval)
+            try? await Task.hostSleep(for: retryInterval)
         }
     }
 }

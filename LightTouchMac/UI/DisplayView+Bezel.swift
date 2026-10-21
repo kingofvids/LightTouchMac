@@ -1,3 +1,4 @@
+import HostCompat
 import Cocoa
 import DeviceRuntime
 import HostRuntime
@@ -53,7 +54,7 @@ extension DisplayView {
             homeButton.isHidden = true
             let profile = profile
             modelFallbackTask = Task { [weak self] in
-                do { try await Task.sleep(for: .seconds(1)) } catch { return }
+                do { try await Task.hostSleep(for: .seconds(1)) } catch { return }
                 self?.showStaticDevice()
             }
             CrashGuard.begin(.model)

@@ -1,6 +1,7 @@
 // The guest package per boot: the offer composed from the bundled itpack for the guest's loader, and the watch
 // that judges it (GuestPackageSession) and keeps the device record's `guest` serials and verdicts.
 
+import HostCompat
 import DeviceRuntime
 import Foundation
 import HostRuntime
@@ -42,7 +43,7 @@ public protocol GuestPackageHost: AnyObject {
     /// The loader's report as the watch judged it: the "Guest tools" line.
     public private(set) var status: GuestPackage.Status = .unknown
     /// The watch's sampling interval (shorter in tests).
-    @PerceptionIgnored var interval: Duration = .seconds(1)
+    @PerceptionIgnored var interval: HostDuration = .seconds(1)
 
     private var task: Task<Void, Never>? {
         get { host.bootScope[.guestPackage] }

@@ -1,6 +1,7 @@
 // The VM's lifecycle and the machine controls that move it: pause and resume (the user's, and the Mac's sleep),
 // and the screen's visibility, which paces the status poll.
 
+import HostCompat
 import DeviceRuntime
 import Foundation
 import HostRuntime
@@ -81,13 +82,13 @@ extension MachineHost {
 /// while `counting` (HostPower.countsBootTime). Closing the lid past the boot budget used to kill the device on wake
 /// (state audit A-2).
 struct BootBudget {
-    private(set) var remaining: Duration
-    private var last = SuspendingClock.now
-    init(_ budget: Duration) { remaining = budget }
+    private(set) var remaining: HostDuration
+    private var last = HostSuspendingClock.now
+    init(_ budget: HostDuration) { remaining = budget }
 
     /// Spends the time since the last tick if `counting`; true once the budget is gone.
     mutating func tick(counting: Bool) -> Bool {
-        let now = SuspendingClock.now
+        let now = HostSuspendingClock.now
         if counting { remaining -= last.duration(to: now) }
         last = now
         return remaining <= .zero

@@ -1,3 +1,4 @@
+import HostCompat
 import Cocoa
 import DeviceRuntime
 import FirmwareSchema

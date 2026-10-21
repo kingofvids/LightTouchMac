@@ -11,6 +11,7 @@
 // to STAGING_DIR/work and is removed before `done`. Decrypted components are cached as CACHE/<ipsw sha1>/ (a
 // version/key-specific manifest makes an entry valid).
 
+import HostCompat
 import CryptoKit
 import Foundation
 import HostRuntime
@@ -312,9 +313,9 @@ public enum Preparer {
     }
     private static func terminate(_ children: [ChildProcess], grace: TimeInterval) async {
         for process in children where isSameProcess(process) { kill(process.pid, SIGTERM) }
-        let deadline = ContinuousClock.now.advanced(by: .seconds(grace))
-        while ContinuousClock.now < deadline, children.contains(where: isSameProcess) {
-            try? await Task.sleep(for: .milliseconds(20))
+        let deadline = HostContinuousClock.now.advanced(by: .seconds(grace))
+        while HostContinuousClock.now < deadline, children.contains(where: isSameProcess) {
+            try? await Task.hostSleep(for: .milliseconds(20))
         }
         for process in children where isSameProcess(process) { kill(process.pid, SIGKILL) }
     }
@@ -360,8 +361,8 @@ public enum Preparer {
         DispatchQueue.concurrentPerform(iterations: files.count) { i in
             do {
                 let h = try digest(nand.appendingPathComponent(files[i]), SHA256(), count: count)
-                hashes.lock.withLock { hashes.sha[files[i]] = h }
-            } catch { hashes.lock.withLock { hashes.error = error } }
+                hashes.lock.hostWithLock { hashes.sha[files[i]] = h }
+            } catch { hashes.lock.hostWithLock { hashes.error = error } }
         }
         if let error = hashes.error { throw error }
         var listing = SHA256()

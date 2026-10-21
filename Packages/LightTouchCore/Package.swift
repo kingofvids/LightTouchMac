@@ -22,6 +22,7 @@ let package = Package(
         .package(path: "../DeviceServices"),
         .package(path: "../DeviceRuntime"),
         .package(path: "../SubprocessCompat"),
+        .package(path: "../HostCompat"),
         .package(url: "https://github.com/weichsel/ZIPFoundation.git", exact: "0.9.20"),
         // Backports @Observable to macOS 12 and 13 (Observation needs 14). On 14+ it forwards to Observation.
         .package(url: "https://github.com/pointfreeco/swift-perception.git", exact: "2.0.9"),
@@ -36,6 +37,7 @@ let package = Package(
                 .product(name: "HostServiceClient", package: "DeviceServices"),
                 .product(name: "DeviceRuntime", package: "DeviceRuntime"),
                 .product(name: "Subprocess", package: "SubprocessCompat"),
+                .product(name: "HostCompat", package: "HostCompat"),
                 .product(name: "ZIPFoundation", package: "ZIPFoundation"),
                 .product(name: "Perception", package: "swift-perception"),
             ],

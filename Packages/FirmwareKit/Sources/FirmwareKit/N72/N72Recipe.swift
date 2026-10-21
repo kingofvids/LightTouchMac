@@ -20,6 +20,7 @@
 
 import CryptoKit
 import Foundation
+import HostCompat
 
 final class N72Board: Board {
     static let models = ["8g": "MB528", "16g": "MB531", "32g": "MB533"]
@@ -150,9 +151,9 @@ final class N72Board: Board {
             "kernelcache_path": kcPath, "kernelcache_member": kcMember,
             "kernel": Self.firstMatch(
                 try Data(contentsOf: c.decFile("kernelcache.mach")),
-                /Darwin Kernel Version [^\x00]+/
+                #"Darwin Kernel Version [^\x00]+"#
             ) ?? NSNull(),
-            "iboot": Self.firstMatch(iboot, /iBoot-[0-9.]+/) ?? "?", "direct_iboot": major >= 3,
+            "iboot": Self.firstMatch(iboot, #"iBoot-[0-9.]+"#) ?? "?", "direct_iboot": major >= 3,
         ]
         prefix = "Firmware/all_flash/all_flash.\(e.board).production/"
         let img3Members = try ipsw.names().filter { $0.hasPrefix(prefix) && $0.hasSuffix(".img3") }
@@ -293,8 +294,8 @@ final class N72Board: Board {
             .first { FileManager.default.fileExists(atPath: $0.path) }
     }
 
-    static func firstMatch(_ d: Data, _ r: Regex<Substring>) -> String? {
-        String(decoding: d, as: UTF8.self).firstMatch(of: r).map { String($0.output) }
+    static func firstMatch(_ d: Data, _ pattern: String) -> String? {
+        String(decoding: d, as: UTF8.self).hostFirstMatch(pattern)?[0]
     }
 
     /// The volume path the decrypted iBoot loads the kernelcache from (its one kcPrefix string), without the "/".
@@ -303,7 +304,7 @@ final class N72Board: Board {
         let p = Array(kcPrefix.utf8)
         var hits = Set<String>()
         var i = 0
-        while let r = b[i...].firstRange(of: p) {
+        while let r = b[i...].hostFirstRange(of: p) {
             var j = r.upperBound
             while j < b.count, (0x21...0x7E).contains(b[j]) { j += 1 }
             if j > r.upperBound { hits.insert(String(decoding: b[r.lowerBound + 1..<j], as: UTF8.self)) }

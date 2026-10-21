@@ -1,3 +1,4 @@
+import HostCompat
 import Foundation
 
 /// Quit's ladder (the app delegate's applicationShouldTerminate): work quitting would interrupt (an erase, a file
@@ -13,13 +14,13 @@ public final class QuitCoordinator {
     private let budget: TimeInterval
     private let reply: () -> Void
     private let retry: @MainActor () -> Void
-    private let poll: Duration
+    private let poll: HostDuration
     /// Quit When Done was chosen: waiting for the work, then quitting again.
     private var waitingForWork: Task<Void, Never>?
 
     public init(
         budget: TimeInterval,
-        poll: Duration = .milliseconds(500),
+        poll: HostDuration = .milliseconds(500),
         retry: @escaping @MainActor () -> Void,
         reply: @escaping () -> Void
     ) {
@@ -66,7 +67,7 @@ public final class QuitCoordinator {
         awaitingTermination = true
         let budget = budget
         backstop = Task { [weak self] in
-            do { try await Task.sleep(for: .seconds(budget)) } catch { return }
+            do { try await Task.hostSleep(for: .seconds(budget)) } catch { return }
             logEvent("quit: shutdown did not finish in time — quitting anyway")
             self?.finish()
         }
@@ -92,7 +93,7 @@ public final class QuitCoordinator {
         let poll = poll
         waitingForWork = Task { [weak self] in
             while busy() != nil {
-                do { try await Task.sleep(for: poll) } catch { return }
+                do { try await Task.hostSleep(for: poll) } catch { return }
             }
             self?.waitingForWork = nil
             self?.retry()

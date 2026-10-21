@@ -1,3 +1,4 @@
+import HostCompat
 import Cocoa
 import DeviceRuntime
 import HostRuntime
@@ -154,9 +155,9 @@ extension DisplayView {
         Task { @MainActor in
             for _ in 0..<2 {
                 sendVisualTouch(0, TouchPhase.begin, nx, ny)
-                try? await Task.sleep(for: .milliseconds(40))
+                try? await Task.hostSleep(for: .milliseconds(40))
                 sendVisualTouch(0, TouchPhase.end, nx, ny)
-                try? await Task.sleep(for: .milliseconds(70))
+                try? await Task.hostSleep(for: .milliseconds(70))
             }
         }
     }
@@ -270,7 +271,7 @@ extension DisplayView {
             if event.phase.isEmpty {
                 wheelTiltResetTask?.cancel()
                 wheelTiltResetTask = Task { [weak self] in
-                    do { try await Task.sleep(for: .milliseconds(180)) } catch { return }
+                    do { try await Task.hostSleep(for: .milliseconds(180)) } catch { return }
                     self?.endTilt()
                 }
             }

@@ -1,6 +1,7 @@
 // From the boot until SpringBoard answers over lockdown: the startup status the window shows, how far the boot has
 // provably got (BootStage), and the one display wake a boot gets before input is enabled.
 
+import HostCompat
 import DeviceRuntime
 import Foundation
 import HostRuntime
@@ -37,7 +38,7 @@ public protocol ReadinessHost: AnyObject {
     /// Fired with the old value when `preparingDevice` is set (the startup clock).
     @PerceptionIgnored public var onPreparingChange: ((Bool) -> Void)?
     /// The board's boot budget (shorter in tests).
-    @PerceptionIgnored var budget: Duration
+    @PerceptionIgnored var budget: HostDuration
 
     public init(host: ReadinessHost, notices: DeviceNotices) {
         self.host = host
@@ -117,7 +118,7 @@ public protocol ReadinessHost: AnyObject {
                         notices.report(ReadinessDeadline.notice(shortName: host.profile.shortName), for: .preparation)
                     }
                     if host.isPainting, await host.deviceReady() { break }
-                    try await Task.sleep(for: .milliseconds(250))
+                    try await Task.hostSleep(for: .milliseconds(250))
                 }
                 try Task.checkCancellation()
                 guard generation == host.bootScope.generation else { return }
@@ -157,7 +158,7 @@ public protocol ReadinessHost: AnyObject {
                     logEvent("boot: waking the display after device preparation")
                     host.pressHome()
                     for _ in 0..<20 {
-                        try await Task.sleep(for: .milliseconds(100))
+                        try await Task.hostSleep(for: .milliseconds(100))
                         guard generation == host.bootScope.generation, !host.isDead, !host.shuttingDown else { return }
                         if host.status?.displaySleeping != true { break }
                     }

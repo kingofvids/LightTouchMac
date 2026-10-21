@@ -1,3 +1,4 @@
+import HostCompat
 import Cocoa
 import DeviceRuntime
 import FirmwareSchema
@@ -283,7 +284,7 @@ extension EmulatorController {
         bootScope[.crashReports] = Task { [weak self] in
             while !Task.isCancelled {
                 await self?.logNewCrashes()
-                try? await Task.sleep(for: .seconds(60))
+                try? await Task.hostSleep(for: .seconds(60))
             }
         }
     }

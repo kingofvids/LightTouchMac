@@ -1,6 +1,7 @@
 // The services helper's engine for one endpoint: the run kernel every operation goes through (the gate, a
 // deadline, a fresh idevice handle), the attachment probe and lockdown reads.
 
+import HostCompat
 import Foundation
 import HostServiceWire
 
@@ -15,7 +16,7 @@ extension DeviceServices {
     {
         let socket = clientSocket
         return try await DeviceGate.shared.serialized(socket: socket) {
-            let started = ContinuousClock.now
+            let started = HostContinuousClock.now
             do {
                 return try await withDeadline(seconds, label) {
                     var device: OpaquePointer?

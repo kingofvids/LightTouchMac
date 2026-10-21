@@ -1,3 +1,4 @@
+import HostCompat
 import Foundation
 import HostServiceWire
 import Subprocess
@@ -105,7 +106,7 @@ actor HostServiceWorker {
                     return
                 }
                 let timer = Task { [weak self] in
-                    do { try await Task.sleep(for: .seconds(seconds)) } catch { return }
+                    do { try await Task.hostSleep(for: .seconds(seconds)) } catch { return }
                     await self?.cancel(id, error: DeviceError.timedOut(operation: "host service"))
                 }
                 pending[id] = Pending(

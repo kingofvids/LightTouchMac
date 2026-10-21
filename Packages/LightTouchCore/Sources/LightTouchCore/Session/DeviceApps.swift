@@ -1,6 +1,7 @@
 // App management on a running device: whether its services can be reached, its lockdown services and install
 // pipeline, installs and media imports (which hold the device), and restarting the Home screen.
 
+import HostCompat
 import DeviceRuntime
 import Foundation
 import HostRuntime
@@ -160,8 +161,8 @@ public protocol AppsHost: AnyObject {
     /// the screen of the SpringBoard that is going away.
     public func waitForSpringBoard(agentCounts: Bool = false) async throws {
         guard hasSpringBoardServices else { return }
-        let deadline = ContinuousClock.now + .seconds(45 * Board.hostSlowdown)
-        while ContinuousClock.now < deadline {
+        let deadline = HostContinuousClock.now + .seconds(45 * Board.hostSlowdown)
+        while HostContinuousClock.now < deadline {
             try Task.checkCancellation()
             if (try? await services.homeScreenOrder()) != nil { return }
             if agentCounts, host.guestAgent.isAlive,
@@ -170,7 +171,7 @@ public protocol AppsHost: AnyObject {
                 logEvent("boot: SpringBoard answers through the guest agent (its layout service did not)")
                 return
             }
-            try await Task.sleep(for: .seconds(1))
+            try await Task.hostSleep(for: .seconds(1))
         }
         throw DeviceToolsError.failed(
             "The Home screen didn’t come back. Restart the \(host.profile.shortName); your apps are kept."

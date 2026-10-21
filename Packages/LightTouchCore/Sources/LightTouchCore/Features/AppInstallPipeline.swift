@@ -5,6 +5,7 @@
 // services' (InstallationProxy, AFC) and the agent's (dlicon); the order and
 // the policy between them live here.
 
+import HostCompat
 import Foundation
 import HostServiceClient
 import HostServiceWire
@@ -33,7 +34,7 @@ public struct AppInstallPipeline: Sendable {
         services: any AppInstallServices,
         agent: any InstallPlaceholderAgent,
         deviceOS: String = "3.1.3",
-        afcReadyTimeout: Duration = .seconds(300)
+        afcReadyTimeout: HostDuration = .seconds(300)
     ) {
         self.services = services
         self.agent = agent
@@ -47,7 +48,7 @@ public struct AppInstallPipeline: Sendable {
     /// iOS 7 only: how long the first AFC request may keep timing out before the install gives up. 7.x
     /// starts afcd in launchd's throttled band, and early in a boot it can sit unscheduled behind ~100
     /// runnable daemon threads for minutes (qemu-ios docs/n90 debt 6); a request sent then goes unanswered.
-    public var afcReadyTimeout: Duration = .seconds(300)
+    public var afcReadyTimeout: HostDuration = .seconds(300)
 
     /// Install a decrypted .ipa: AFC stage + instproxy, in-process, no shell.
     /// Every supported image carries its GL engine shim. `progress` gets
@@ -161,16 +162,16 @@ public struct AppInstallPipeline: Sendable {
     /// before anything is sent. Other errors, and every error on other versions, fail as before.
     private func freeSpaceOnceAFCAnswers(_ progress: @Sendable (String) -> Void) async throws -> Int64 {
         guard (Int(deviceOS.prefix { $0.isNumber }) ?? 0) >= 7 else { return try await services.freeSpaceBytes() }
-        let deadline = ContinuousClock.now + afcReadyTimeout
+        let deadline = HostContinuousClock.now + afcReadyTimeout
         while true {
             do { return try await services.freeSpaceBytes() } catch DeviceError.timedOut {
-                guard ContinuousClock.now < deadline else {
+                guard HostContinuousClock.now < deadline else {
                     throw DeviceError.failed(
                         "The device’s file service didn’t answer while iOS was starting, so the app wasn’t sent. Try again in a minute."
                     )
                 }
                 progress("Waiting for iOS to finish starting…")
-                try await Task.sleep(for: .seconds(1))
+                try await Task.hostSleep(for: .seconds(1))
             }
         }
     }
@@ -225,7 +226,7 @@ public struct AppInstallPipeline: Sendable {
         for i in 0..<attempts {
             do { return try await body() } catch let error as DeviceError where error.isTransient {
                 lastError = error
-                try await Task.sleep(for: .seconds(Double(min(i + 1, 5)) * 2))
+                try await Task.hostSleep(for: .seconds(Double(min(i + 1, 5)) * 2))
             }
         }
         throw lastError

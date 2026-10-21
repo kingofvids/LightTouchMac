@@ -1,3 +1,4 @@
+import HostCompat
 import Cocoa
 import DeviceRuntime
 import HostRuntime
@@ -69,7 +70,7 @@ extension AppsInspectorViewController {
                 // for what the guest never publishes (icon reordering) and for
                 // a dropped session, neither of which needs a 3 s cadence. An
                 // unactivated guest refuses every service: nothing to press for.
-                try? await Task.sleep(
+                try? await Task.hostSleep(
                     for: .seconds(self.haveLoaded || self.emulator.connectionIssue?.persistent == true ? 15 : 1)
                 )
             }
@@ -103,7 +104,7 @@ extension AppsInspectorViewController {
             case .reread(let delay):
                 rereads.insert(key)
                 Task {
-                    try? await Task.sleep(for: .seconds(delay))
+                    try? await Task.hostSleep(for: .seconds(delay))
                     await self.loadOnce()
                 }
                 return false

@@ -6,6 +6,7 @@
 // Pure Foundation; LightTouchCoreTests' GuestFaultsTests.
 
 import Foundation
+import HostCompat
 
 public nonisolated enum GuestFaults {
     /// Phrases that are a fault wherever they appear, and what each means.
@@ -90,8 +91,8 @@ public nonisolated enum GuestFaults {
         let name = (path as NSString).lastPathComponent
         guard ["plist", "ips", "crash"].contains((name as NSString).pathExtension),
             !name.hasPrefix("LatestCrash"), !name.hasPrefix("Sandbox-"), !name.hasPrefix("SystemLog_"),
-            let match = name.firstMatch(of: /^(.+?)[_-]\d{4}-\d{2}-\d{2}-\d{6}/)
+            let match = name.hostFirstMatch(#"^(.+?)[_-]\d{4}-\d{2}-\d{2}-\d{6}"#)
         else { return nil }
-        return String(match.1)
+        return match[1]
     }
 }

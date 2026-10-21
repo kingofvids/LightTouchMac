@@ -5,6 +5,7 @@
 // asks this for what they enable; the device (its screen and canvas capture)
 // comes from the selected session.
 
+import HostCompat
 import Cocoa
 import HostRuntime
 import LightTouchCore
@@ -202,7 +203,7 @@ import UniformTypeIdentifiers
         copiedScreenshot = true
         onChange()
         copyConfirmation = Task { [weak self] in
-            do { try await Task.sleep(for: .seconds(1.5)) } catch { return }
+            do { try await Task.hostSleep(for: .seconds(1.5)) } catch { return }
             self?.copiedScreenshot = false
             self?.onChange()
         }

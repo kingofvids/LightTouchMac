@@ -1,3 +1,4 @@
+import HostCompat
 import Foundation
 import os
 
@@ -5,17 +6,17 @@ import os
 /// exits, so a second helper on the same storage — from another Light Touch, or beside one still finishing its
 /// shutdown — is refused before it boots. Taken on the link's queue, read on the boot path.
 public nonisolated final class HeldLease: Sendable {
-    private let held = OSAllocatedUnfairLock<StorageLease?>(initialState: nil)
+    private let held = HostLock<StorageLease?>(initialState: nil)
     public init() {}
 
-    public var lease: StorageLease? { held.withLock { $0 } }
+    public var lease: StorageLease? { held.hostWithLock { $0 } }
 
     /// True when there is no lease to take (`path` nil) or it was taken; a refusal keeps nothing and says why.
     public func take(_ path: String?, log: (String) -> Void) -> Bool {
         guard let path else { return true }
         do {
             let lease = try StorageLease(URL(fileURLWithPath: path))
-            held.withLock { $0 = lease }
+            held.hostWithLock { $0 = lease }
             return true
         } catch let error as StorageLease.Failure {
             switch error {
@@ -32,7 +33,7 @@ public nonisolated final class HeldLease: Sendable {
 
     /// Give the lease up (tests; a helper keeps it until it exits).
     public func release() {
-        held.withLock {
+        held.hostWithLock {
             $0?.close()
             $0 = nil
         }

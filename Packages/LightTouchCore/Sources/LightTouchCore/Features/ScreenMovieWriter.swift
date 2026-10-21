@@ -1,3 +1,4 @@
+import HostCompat
 import AVFoundation
 import CoreGraphics
 import Darwin
@@ -227,12 +228,12 @@ public actor ScreenMovieWriter {
 
     private func encodeAudio(_ data: Data, frames: Int) async throws {
         guard let audioInput, let writer else { return }
-        let deadline = ContinuousClock.now + .seconds(10)
+        let deadline = HostContinuousClock.now + .seconds(10)
         while !audioInput.isReadyForMoreMediaData {
-            guard writer.status == .writing, ContinuousClock.now < deadline else {
+            guard writer.status == .writing, HostContinuousClock.now < deadline else {
                 throw writer.error ?? CaptureError.failed("Couldn’t record the device’s audio.")
             }
-            try await Task.sleep(for: .milliseconds(10))
+            try await Task.hostSleep(for: .milliseconds(10))
         }
         if audioFormat == nil {
             var format = AudioStreamBasicDescription(
@@ -341,15 +342,15 @@ public actor ScreenMovieWriter {
             guard count > 0 else { throw CaptureError.failed("No device frames were recorded.") }
             // The helper drains what the guest had queued after the stop (<= 1 s),
             // then says so (.audioEnded).
-            let deadline = ContinuousClock.now + .seconds(10)
+            let deadline = HostContinuousClock.now + .seconds(10)
             while true {
                 let drained = try await drainAudio(through: end)
                 if drained, capture?.isFinished ?? true { break }
-                guard ContinuousClock.now < deadline else {
+                guard HostContinuousClock.now < deadline else {
                     if drained { break }  // the device never ended its audio: keep what arrived
                     throw CaptureError.failed("Couldn’t record the device’s audio.")
                 }
-                try await Task.sleep(for: .milliseconds(10))
+                try await Task.hostSleep(for: .milliseconds(10))
             }
             try await appendAudio(Data(), seconds: end, through: end)
             writer.endSession(atSourceTime: CMTime(seconds: end, preferredTimescale: 44100))
@@ -391,10 +392,10 @@ public nonisolated final class GuestAudioCapture: @unchecked Sendable {
     }
 
     /// The helper's capture generation (its audioStart reply).
-    public func begin(generation: UInt64) { lock.withLock { self.generation = generation } }
+    public func begin(generation: UInt64) { lock.hostWithLock { self.generation = generation } }
 
     public func receive(_ event: LinkEvent) {
-        lock.withLock {
+        lock.hostWithLock {
             switch event {
             // Events can land before `begin`: nothing else is capturing then.
             case .audio(let g, let seconds, let pcm) where generation == 0 || g == generation:
@@ -410,7 +411,7 @@ public nonisolated final class GuestAudioCapture: @unchecked Sendable {
     public var seconds: Double { clock() }
 
     public func stop() {
-        let g: UInt64 = lock.withLock {
+        let g: UInt64 = lock.hostWithLock {
             stopped = true
             return generation
         }
@@ -418,10 +419,10 @@ public nonisolated final class GuestAudioCapture: @unchecked Sendable {
     }
 
     /// After stop(): the helper has delivered everything.
-    public var isFinished: Bool { lock.withLock { ended && packets.isEmpty } }
+    public var isFinished: Bool { lock.hostWithLock { ended && packets.isEmpty } }
 
     public func read() throws -> (data: Data, seconds: Double)? {
-        try lock.withLock {
+        try lock.hostWithLock {
             if !packets.isEmpty { return packets.removeFirst() }
             if ended, failed, !stopped { throw CaptureError.failed("Couldn’t record the device’s audio.") }
             return nil

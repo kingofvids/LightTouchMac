@@ -1,3 +1,4 @@
+import HostCompat
 import Foundation
 import HostServiceWire
 
@@ -14,7 +15,7 @@ nonisolated final class EventWriter: @unchecked Sendable {
     private let handle: FileHandle
     init(handle: FileHandle = .standardOutput) { self.handle = handle }
     func send(_ event: HostServiceEvent) {
-        lock.withLock {
+        lock.hostWithLock {
             if let bytes = try? JSONEncoder().encode(event) { writeDroppingClosedPipe(bytes + Data([10]), to: handle) }
         }
     }

@@ -1,6 +1,7 @@
 // The session's guest-facing flows that need nothing but their inputs: opening an app (the wake before it) and
 // composing the boot's guest-package offer.
 
+import HostCompat
 import DeviceRuntime
 import Foundation
 import HostRuntime
@@ -31,7 +32,7 @@ extension AppLaunchHost {
         if isSleeping {
             pressHome()
             for _ in 0..<10 {
-                try await Task.sleep(for: .milliseconds(100))
+                try await Task.hostSleep(for: .milliseconds(100))
                 guard acceptsInput else { throw AppLaunchError.unavailable }
                 if displaySleeping != true { break }
             }

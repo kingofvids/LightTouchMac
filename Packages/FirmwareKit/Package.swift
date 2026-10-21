@@ -24,6 +24,7 @@ let package = Package(
         .package(url: "https://github.com/weichsel/ZIPFoundation.git", exact: "0.9.20"),
         .package(url: "https://github.com/p-x9/MachOKit.git", exact: "0.53.0"),
         .package(path: "../SubprocessCompat"),
+        .package(path: "../HostCompat"),
         .package(url: "https://github.com/mtgto/Unrar.swift.git", exact: "0.5.4"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", exact: "1.8.2"),
     ],
@@ -41,6 +42,7 @@ let package = Package(
                 .product(name: "ZIPFoundation", package: "ZIPFoundation"),
                 .product(name: "MachOKit", package: "MachOKit"),
                 .product(name: "Subprocess", package: "SubprocessCompat"),
+                .product(name: "HostCompat", package: "HostCompat"),
                 .product(name: "Unrar", package: "Unrar.swift"),
             ]
         ),

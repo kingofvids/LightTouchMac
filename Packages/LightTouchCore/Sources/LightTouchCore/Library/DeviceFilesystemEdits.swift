@@ -1,3 +1,4 @@
+import HostCompat
 import FirmwareSchema
 import Foundation
 import HostRuntime
@@ -20,7 +21,7 @@ public final class DeviceFilesystemEdits {
     private let isMounted: (URL) -> Bool
     /// Whether anything is writing to the volume mounted on a folder (a copy in progress).
     private let isWriting: (URL) async -> Bool
-    private let poll: Duration
+    private let poll: HostDuration
 
     public init(
         preparer: URL? = FirmwareJobs.preparer,
@@ -31,7 +32,7 @@ public final class DeviceFilesystemEdits {
         presentError: @escaping (any Error) -> Void,
         isMounted: @escaping (URL) -> Bool = DeviceFilesystemEdits.isMountPoint,
         isWriting: @escaping (URL) async -> Bool = DeviceFilesystemEdits.isBeingWritten,
-        poll: Duration = .seconds(1)
+        poll: HostDuration = .seconds(1)
     ) {
         self.preparer = preparer
         self.state = state
@@ -238,7 +239,7 @@ public final class DeviceFilesystemEdits {
                     NotificationCenter.default.post(name: DeviceLibrary.didChangeNotification, object: library)
                     return
                 }
-                try? await Task.sleep(for: poll)
+                try? await Task.hostSleep(for: poll)
             }
         }
     }
@@ -250,7 +251,7 @@ public final class DeviceFilesystemEdits {
         let saving = activity[instance.id]
         guard isMounted(mountPoint), await isWriting(mountPoint) else { return }
         activity[instance.id] = "Waiting for copies to finish…"
-        while await isWriting(mountPoint) { try await Task.sleep(for: poll) }
+        while await isWriting(mountPoint) { try await Task.hostSleep(for: poll) }
         activity[instance.id] = saving
     }
 
@@ -280,7 +281,7 @@ public final class DeviceFilesystemEdits {
         }
         let before = counts()
         if hasWriter(onVolume: url) { return true }
-        try? await Task.sleep(for: .milliseconds(500))
+        try? await Task.hostSleep(for: .milliseconds(500))
         return counts() != before
     }
 }

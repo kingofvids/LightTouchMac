@@ -13,14 +13,15 @@ let package = Package(
         .library(name: "HostServiceWire", type: .static, targets: ["HostServiceWire"]),
         .library(name: "HostServiceClient", type: .static, targets: ["HostServiceClient"]),
     ],
-    dependencies: [.package(path: "../SubprocessCompat")],
+    dependencies: [.package(path: "../SubprocessCompat"), .package(path: "../HostCompat")],
     targets: [
-        .target(name: "HostServiceWire"),
+        .target(name: "HostServiceWire", dependencies: [.product(name: "HostCompat", package: "HostCompat")]),
         .target(
             name: "HostServiceClient",
             dependencies: [
                 "HostServiceWire",
                 .product(name: "Subprocess", package: "SubprocessCompat"),
+                .product(name: "HostCompat", package: "HostCompat"),
             ]
         ),
         .testTarget(name: "HostServiceWireTests", dependencies: ["HostServiceWire"]),

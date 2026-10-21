@@ -1,3 +1,4 @@
+import HostCompat
 import Foundation
 
 /// Wait for `work`, but not forever — and let it finish on its own if we stop
@@ -14,7 +15,7 @@ public func withSoftDeadline<T: Sendable>(
     let once = ResumeOnce<T?>()
     let worker = Task { once.resume(.success(await work())) }
     let watchdog = Task.detached {
-        do { try await Task.sleep(for: .seconds(seconds)) } catch { return }
+        do { try await Task.hostSleep(for: .seconds(seconds)) } catch { return }
         if once.resume(.success(nil)) { worker.cancel() }
     }
     defer { watchdog.cancel() }

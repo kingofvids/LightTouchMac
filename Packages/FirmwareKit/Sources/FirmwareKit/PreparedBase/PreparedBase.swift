@@ -25,6 +25,7 @@
 // create's output. seedLanguage then gives its volume the language, region and keyboards create seeds from the Mac: the
 // release packs a base prepared in en-US whatever the building Mac's.
 
+import HostCompat
 import CryptoKit
 import Darwin
 import Foundation
@@ -167,8 +168,8 @@ public enum PreparedBase {
                 } else {
                     try deflate(raw).write(to: file)
                 }
-                results.lock.withLock { results.hashes[number(i)] = hash }
-            } catch { results.lock.withLock { results.error = results.error ?? error } }
+                results.lock.hostWithLock { results.hashes[number(i)] = hash }
+            } catch { results.lock.hostWithLock { results.error = results.error ?? error } }
         }
         if let error = results.error { throw error }
         return results.hashes
@@ -292,7 +293,7 @@ public enum PreparedBase {
                 guard n == length else {
                     throw FirmwareError(errno == ENOSPC ? .diskFull : .internal, String(cString: strerror(errno)))
                 }
-            } catch { failure.lock.withLock { failure.error = failure.error ?? error } }
+            } catch { failure.lock.hostWithLock { failure.error = failure.error ?? error } }
         }
         if let error = failure.error { throw error }
     }

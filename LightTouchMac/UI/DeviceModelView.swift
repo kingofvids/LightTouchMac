@@ -1,3 +1,4 @@
+import HostCompat
 import AppKit
 import HostRuntime
 import ImageIO
@@ -340,7 +341,7 @@ final class DeviceModelView: NSView {
             {
                 return true
             }
-            do { try await Task.sleep(for: .milliseconds(50)) } catch { return false }
+            do { try await Task.hostSleep(for: .milliseconds(50)) } catch { return false }
         }
         return false
     }

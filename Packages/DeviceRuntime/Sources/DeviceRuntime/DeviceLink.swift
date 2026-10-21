@@ -1,3 +1,4 @@
+import HostCompat
 import Foundation
 import HostRuntime
 import IOSurface
@@ -122,16 +123,16 @@ nonisolated public final class DeviceLink: @unchecked Sendable {
         if _pid > 0 { DeviceRendezvousServer.shared.unregister(_pid) }
     }
 
-    public var pid: pid_t { lock.withLock { _pid } }
+    public var pid: pid_t { lock.hostWithLock { _pid } }
     /// The hello reply: protocol, dylib path + mtime, build id, device info.
-    public var info: HelperInfo? { lock.withLock { _info } }
+    public var info: HelperInfo? { lock.hostWithLock { _info } }
     /// The status block, read now. nil until the helper's first hello.
-    public var status: SharedStatus? { lock.withLock { statusBlock }?.snapshot() }
+    public var status: SharedStatus? { lock.hostWithLock { statusBlock }?.snapshot() }
 
     /// The front frame surface. `isNew` when it changed since the last call.
     /// Call from one thread only (the display link); hold the surface, not the tuple.
     public func frontSurface() -> (surface: IOSurface, serial: UInt64, isNew: Bool)? {
-        lock.withLock { ring }?.front()
+        lock.hostWithLock { ring }?.front()
     }
 
     // MARK: - Start
@@ -165,7 +166,7 @@ nonisolated public final class DeviceLink: @unchecked Sendable {
         var environment = ProcessInfo.processInfo.environment.merging(configuration.environment) { $1 }
         if let dylib = configuration.dylib { environment["LTM_QEMU_DYLIB"] = dylib }
         let envp = environment.map { "\($0)=\($1)" }
-        lock.withLock { startCompletion = completion }
+        lock.hostWithLock { startCompletion = completion }
 
         let registration = DeviceRendezvousServer.Registration(
             token: token,
@@ -187,14 +188,14 @@ nonisolated public final class DeviceLink: @unchecked Sendable {
         close(sv[1])
         guard pid > 0 else {
             close(sv[0])
-            lock.withLock { startCompletion = nil }
+            lock.hostWithLock { startCompletion = nil }
             return queue.async { completion(.failure(.spawnFailed(-pid))) }
         }
-        lock.withLock { _pid = pid }
+        lock.hostWithLock { _pid = pid }
 
         let exit = DispatchSource.makeProcessSource(identifier: pid, eventMask: .exit, queue: queue)
         exit.setEventHandler { [weak self] in self?.reap() }
-        lock.withLock { exitSource = exit }
+        lock.hostWithLock { exitSource = exit }
         exit.resume()
 
         let channel = LinkChannel<HelperMessage, AppMessage>(
@@ -205,7 +206,7 @@ nonisolated public final class DeviceLink: @unchecked Sendable {
                 self?.invalidate(.closed(error.map { "\($0)" } ?? "end of file"), kill: false)
             }
         )
-        lock.withLock { self.channel = channel }
+        lock.hostWithLock { self.channel = channel }
 
         request(
             .hello(protocolVersion: DeviceLinkWire.protocolVersion, board: configuration.board),
@@ -217,7 +218,7 @@ nonisolated public final class DeviceLink: @unchecked Sendable {
                 guard info.protocolVersion == DeviceLinkWire.protocolVersion else {
                     return invalidate(.protocolMismatch(helper: info.protocolVersion), kill: true)
                 }
-                lock.withLock { self._info = info }
+                lock.hostWithLock { self._info = info }
                 finishStartIfReady()
             case .success(.failure(let message)): invalidate(.helperFailure(message), kill: true)
             case .success(let other): invalidate(.helperFailure("unexpected hello reply \(other)"), kill: true)
@@ -225,7 +226,7 @@ nonisolated public final class DeviceLink: @unchecked Sendable {
             }
         }
         queue.asyncAfter(deadline: .now() + configuration.connectTimeout) { [weak self] in
-            guard let self, lock.withLock({ self.startCompletion != nil }) else { return }
+            guard let self, lock.hostWithLock({ self.startCompletion != nil }) else { return }
             invalidate(.timedOut, kill: true)
         }
     }
@@ -233,7 +234,7 @@ nonisolated public final class DeviceLink: @unchecked Sendable {
     private func surfacesArrived(_ hello: DeviceRendezvousServer.Hello) {
         let status = StatusBlock(hello.surfaces[0])
         guard status.isValid else { return invalidate(.rejected("bad status block"), kill: true) }
-        lock.withLock {
+        lock.hostWithLock {
             ring?.release()
             statusBlock = status
             if hello.generation > 0 {
@@ -248,7 +249,7 @@ nonisolated public final class DeviceLink: @unchecked Sendable {
     }
 
     private func finishStartIfReady() {
-        let ready: (HelperInfo, (Result<HelperInfo, DeviceLinkError>) -> Void)? = lock.withLock {
+        let ready: (HelperInfo, (Result<HelperInfo, DeviceLinkError>) -> Void)? = lock.hostWithLock {
             guard let info = self._info, self.statusBlock != nil, let c = self.startCompletion else { return nil }
             self.startCompletion = nil
             return (info, c)
@@ -260,25 +261,25 @@ nonisolated public final class DeviceLink: @unchecked Sendable {
 
     /// Fire-and-forget, ordered. Dropped once the link is invalid.
     public func send(_ command: LinkCommand) {
-        lock.withLock { channel }?.send(.command(command))
+        lock.hostWithLock { channel }?.send(.command(command))
     }
 
     /// One request; `reply` runs once on `queue` (a reply, or .timedOut / .closed).
     public func request(_ request: LinkRequest, timeout: TimeInterval = 10, reply: @escaping Reply) {
-        let (id, channel, dead): (UInt64, LinkChannel<HelperMessage, AppMessage>?, Bool) = lock.withLock {
+        let (id, channel, dead): (UInt64, LinkChannel<HelperMessage, AppMessage>?, Bool) = lock.hostWithLock {
             let id = nextID
             nextID += 1
             return (id, channel, invalidated)
         }
         guard let channel, !dead else { return queue.async { reply(.failure(.closed("not connected"))) } }
         let timer = DispatchWorkItem { [weak self] in
-            guard let entry = self?.lock.withLock({ self?.pending.removeValue(forKey: id) }) else { return }
+            guard let entry = self?.lock.hostWithLock({ self?.pending.removeValue(forKey: id) }) else { return }
             entry.reply(.failure(.timedOut))
         }
-        lock.withLock { pending[id] = Pending(timer: timer, reply: reply) }
+        lock.hostWithLock { pending[id] = Pending(timer: timer, reply: reply) }
         queue.asyncAfter(deadline: .now() + timeout, execute: timer)
         if !channel.send(.request(id: id, request)) {
-            if let entry = lock.withLock({ pending.removeValue(forKey: id) }) {
+            if let entry = lock.hostWithLock({ pending.removeValue(forKey: id) }) {
                 entry.timer.cancel()
                 queue.async { entry.reply(.failure(.helperFailure("request too large"))) }
             }
@@ -294,7 +295,7 @@ nonisolated public final class DeviceLink: @unchecked Sendable {
     private func received(_ message: HelperMessage) {
         switch message {
         case .reply(let id, let reply):
-            guard let entry = lock.withLock({ pending.removeValue(forKey: id) }) else { return }
+            guard let entry = lock.hostWithLock({ pending.removeValue(forKey: id) }) else { return }
             entry.timer.cancel()
             entry.reply(.success(reply))
         case .event(let event):
@@ -320,7 +321,7 @@ nonisolated public final class DeviceLink: @unchecked Sendable {
             (
                 Bool, LinkChannel<HelperMessage, AppMessage>?, [Pending],
                 (@Sendable (Result<HelperInfo, DeviceLinkError>) -> Void)?
-            ) = lock.withLock {
+            ) = lock.hostWithLock {
                 guard !invalidated else { return (false, nil, [], nil) }
                 invalidated = true
                 let waiting = Array(pending.values)
@@ -363,14 +364,14 @@ nonisolated public final class DeviceLink: @unchecked Sendable {
             termination = .unknown
         }
         // Zero the pid now: a late terminate() or kill() must not signal a reused one.
-        lock.withLock {
+        lock.hostWithLock {
             exitSource?.cancel()
             exitSource = nil
             _pid = 0
         }
         DeviceRendezvousServer.shared.unregister(p)
         // Its last messages (qemuExited) may still be unread: deliver them before the close.
-        lock.withLock { channel }?.drainIncoming()
+        lock.hostWithLock { channel }?.drainIncoming()
         invalidate(.closed("helper exited"), kill: false)
         queue.async { [self] in onTerminated?(termination) }
     }

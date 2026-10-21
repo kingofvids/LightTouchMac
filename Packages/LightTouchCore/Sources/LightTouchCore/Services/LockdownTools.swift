@@ -4,6 +4,7 @@
 // operation for the time zone, lockdown-mcinstall for the proxy's profile
 // (LightTouchServices/Lockdown).
 
+import HostCompat
 import Foundation
 import HostServiceWire
 import Subprocess
@@ -74,7 +75,7 @@ extension DeviceServices {
             if let agent, try await agent.forgetExternalTimeZone() {
                 logEvent("timezone: the device kept \(kept); cleared locationd's first zone, setting again")
             } else {
-                try await Task.sleep(for: .seconds(5))
+                try await Task.hostSleep(for: .seconds(5))
             }
             do {
                 return try await lockdownTZ(
@@ -177,7 +178,7 @@ extension DeviceServices {
                 return (status, child.standardOutput, child.standardError)
             }
             group.addTask {
-                try await Task.sleep(for: .seconds(timeout))
+                try await Task.hostSleep(for: .seconds(timeout))
                 throw DeviceToolsError.failed("The device did not answer the lockdown helper in time.")
             }
             defer { group.cancelAll() }

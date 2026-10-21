@@ -2,6 +2,7 @@
 // contrib/ios-app/qemu-ios-ui.h). The helper reports it in its hello and lists every machine with
 // `LightTouchDevice '{"mode":{"machines":{}}}'`; nothing on this side keeps a copy.
 
+import HostCompat
 import CoreGraphics
 import Foundation
 
@@ -95,9 +96,9 @@ public enum Machines {
 
     /// The helper to list from; set before the first lookup.
     public static var helper: URL? {
-        get { lock.withLock { source } }
+        get { lock.hostWithLock { source } }
         set {
-            lock.withLock {
+            lock.hostWithLock {
                 source = newValue
                 table = nil
             }
@@ -105,12 +106,12 @@ public enum Machines {
     }
 
     public static func set(_ machines: [DeviceInfo]) {
-        lock.withLock { table = index(machines) }
+        lock.hostWithLock { table = index(machines) }
     }
 
     /// One machine's facts; nil when the helper can't list them (no emulator library), or for a board it lacks.
     public static subscript(board: Board) -> DeviceInfo? {
-        lock.withLock {
+        lock.hostWithLock {
             if table == nil, let source {
                 do { table = index(try DeviceInfo.list(helper: source)) } catch {
                     table = [:]

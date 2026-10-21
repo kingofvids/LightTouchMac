@@ -3,6 +3,7 @@
 // Network settings are the device's (EmulatorController.carrierSettings, applied at every boot); calls and SMS go
 // straight to the modem (qemu-ios ios-baseband's actions), and its state is polled once a second while visible.
 
+import HostCompat
 import Perception
 import Cocoa
 import CoreLocation
@@ -151,7 +152,7 @@ struct CarrierPanel: View {
             // ~1 Hz while the panel is on screen; SwiftUI cancels it when the view goes away.
             while !Task.isCancelled {
                 model.poll()
-                try? await Task.sleep(for: .seconds(1))
+                try? await Task.hostSleep(for: .seconds(1))
             }
             if model.walking { model.toggleWalk() }  // the walk steps with the poll: it ends with it
         }

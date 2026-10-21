@@ -1,3 +1,4 @@
+import HostCompat
 import DeviceRuntime
 import Foundation
 import HostRuntime
@@ -52,8 +53,8 @@ final class DeviceHost: @unchecked Sendable {
         status[.guestPackageSupported] = qemu.guestPackageReport != nil ? 1 : 0
     }
 
-    var booted: Bool { stateLock.withLock { bootConfig != nil } }
-    var hasExited: Bool { stateLock.withLock { exited } }
+    var booted: Bool { stateLock.hostWithLock { bootConfig != nil } }
+    var hasExited: Bool { stateLock.hostWithLock { exited } }
 
     func info(board: String?) -> HelperInfo {
         HelperInfo(
@@ -122,7 +123,7 @@ final class DeviceHost: @unchecked Sendable {
         let now = DispatchTime.now().uptimeNanoseconds
         let next = screenVisible && !paused && (displayOn || now &- lastInput < 2_000_000_000)
         // Live, a frame per panel refresh (60 Hz, or the experimental 120); 30 under pressure.
-        let hz = stateLock.withLock { bootConfig?.refreshHz } ?? 60
+        let hz = stateLock.hostWithLock { bootConfig?.refreshHz } ?? 60
         let interval = next ? (constrained ? 1.0 / 30 : 1.0 / Double(hz)) : 0.25
         holdActivity(live: next)
         guard force || interval != pumpInterval else { return }
@@ -134,7 +135,7 @@ final class DeviceHost: @unchecked Sendable {
     /// pumpQueue. A booted VM keeps App Nap off for good (its timers are the guest's clock); only while
     /// live does it also keep the Mac from idle sleep and turn off timer coalescing.
     private func holdActivity(live: Bool) {
-        guard let machine = stateLock.withLock({ exited ? nil : bootConfig?.machine }) else { return }
+        guard let machine = stateLock.hostWithLock({ exited ? nil : bootConfig?.machine }) else { return }
         guard activity == nil || live != activityLive else { return }
         let next = ProcessInfo.processInfo.beginActivity(
             options: live ? [.userInitiated, .latencyCritical] : .userInitiatedAllowingIdleSystemSleep,
@@ -216,7 +217,7 @@ final class DeviceHost: @unchecked Sendable {
             guard let bootStorageAuthority else { throw StorageBootProof.Failure.missingLease }
             try bootStorageAuthority(proof)
         }
-        let first: Bool = stateLock.withLock {
+        let first: Bool = stateLock.hostWithLock {
             guard bootConfig == nil else { return false }
             bootConfig = config
             return true
@@ -244,8 +245,8 @@ final class DeviceHost: @unchecked Sendable {
             refreshStatus()
             status[.exitCode] = UInt64(bitPattern: Int64(rc))
             status[.qemuState] = QemuState.exited.rawValue
-            stateLock.withLock { exited = true }
-            if rc == 0, stateLock.withLock({ cleanStopAsked }), !qemu.storageFailed() { Self.markCleanStop() }
+            stateLock.hostWithLock { exited = true }
+            if rc == 0, stateLock.hostWithLock({ cleanStopAsked }), !qemu.storageFailed() { Self.markCleanStop() }
             pumpQueue.async { [self] in
                 if let activity {
                     ProcessInfo.processInfo.endActivity(activity)
@@ -320,7 +321,7 @@ final class DeviceHost: @unchecked Sendable {
             if let shutdown = qemu.shutdown { helperLog("shutdown: path \(shutdown())") } else { qemu.powerdown() }
         case .quit:
             // after the guest powered itself off, QEMU's own exit flushes the storage: a clean stop too
-            if qemu.shutdownConfirmed() { stateLock.withLock { cleanStopAsked = true } }
+            if qemu.shutdownConfirmed() { stateLock.hostWithLock { cleanStopAsked = true } }
             qemu.quit()
         }
     }
@@ -422,14 +423,14 @@ final class DeviceHost: @unchecked Sendable {
     /// quit QEMU. The guest's filesystems are crash-consistent: HFS+ replays its
     /// journal on the next boot. A guest that already powered off just quits.
     func halt(reason: String) {
-        let proceed: Bool = stateLock.withLock {
+        let proceed: Bool = stateLock.hostWithLock {
             guard !shuttingDown else { return false }
             shuttingDown = true
             return true
         }
         guard proceed else { return }
         helperLog("halt: \(reason)")
-        stateLock.withLock { cleanStopAsked = true }  // QEMU returns 0 from an orderly stop, which flushes
+        stateLock.hostWithLock { cleanStopAsked = true }  // QEMU returns 0 from an orderly stop, which flushes
         guard booted else {
             helperLog("halt: no VM running")
             exit(0)

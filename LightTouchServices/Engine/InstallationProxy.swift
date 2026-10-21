@@ -1,6 +1,7 @@
 // installation_proxy: the installed-app list, install of a staged .ipa (with the
 // owned idle watchdog) and uninstall, on DeviceServices' run kernel.
 
+import HostCompat
 import Foundation
 import HostServiceWire
 
@@ -169,11 +170,11 @@ extension DeviceServices {
     nonisolated private final class InstallCancellation: @unchecked Sendable {
         private let lock = NSLock()
         private var cancelled = false
-        func cancel() { lock.withLock { cancelled = true } }
+        func cancel() { lock.hostWithLock { cancelled = true } }
         /// The mutation's ownership boundary. Cancellation after this check
         /// leaves the active install owned until its terminal callback/watchdog.
         func beginMutation() throws {
-            try lock.withLock { if cancelled { throw CancellationError() } }
+            try lock.hostWithLock { if cancelled { throw CancellationError() } }
         }
     }
 
@@ -334,7 +335,7 @@ extension DeviceServices {
             // pile-up, not to become one.
             AbandonedWork.abandoned("install")
             Task.detached {
-                try? await Task.sleep(for: .seconds(Timeouts.installIdle))
+                try? await Task.hostSleep(for: .seconds(Timeouts.installIdle))
                 AbandonedWork.returned()
             }
             throw DeviceError.timedOut(operation: "install")

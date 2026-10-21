@@ -2,6 +2,7 @@
 // device) or leave it ready (a stopped one). The app keeps running. No request is left behind for an unrelated
 // future launch.
 
+import HostCompat
 import DeviceRuntime
 import Foundation
 import HostRuntime
@@ -78,8 +79,8 @@ public final class DeviceErase {
     private unowned let host: EraseHost
     public init(host: EraseHost) { self.host = host }
     /// How long a helper gets to exit (release every NAND/NOR writer) after its halt, and how often it's checked.
-    var exitWait: Duration = .seconds(15)
-    var exitPoll: Duration = .milliseconds(100)
+    var exitWait: HostDuration = .seconds(15)
+    var exitPoll: HostDuration = .milliseconds(100)
 
     public func request() {
         guard !host.isErasing else { return }
@@ -95,9 +96,9 @@ public final class DeviceErase {
                 // The helper must release every NAND/NOR writer (exit) before removal;
                 // one whose guest powered itself off is still alive.
                 host.helperLink?.send(.machine(.quit))
-                let deadline = ContinuousClock.now + exitWait
-                while host.helper?.isDead == false, ContinuousClock.now < deadline {
-                    try? await Task.sleep(for: exitPoll)
+                let deadline = HostContinuousClock.now + exitWait
+                while host.helper?.isDead == false, HostContinuousClock.now < deadline {
+                    try? await Task.hostSleep(for: exitPoll)
                 }
                 guard host.helper?.isDead != false else {
                     host.isErasing = false

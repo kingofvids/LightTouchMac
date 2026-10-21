@@ -8,6 +8,7 @@
 // (DeviceSettings.tweaks); TweakSettings.defaults says which keys that means on its firmware, and
 // TweakSettings.written which keys it has put there, so turning a tweak off removes only what it wrote.
 
+import HostCompat
 import Foundation
 import HostServiceWire
 
@@ -320,7 +321,7 @@ nonisolated extension GuestDefault {
 /// domains changed), then the agent's live ops.
 public nonisolated enum TweakApplier {
     /// Between asking a restarting SpringBoard whether it's back (tests shorten it).
-    nonisolated(unsafe) static var respringPause: Duration = .seconds(2)
+    nonisolated(unsafe) static var respringPause: HostDuration = .seconds(2)
 
     /// The keys now written (TweakSettings.written), whether SpringBoard was restarted, and the live ops the agent
     /// lacks (an older guest package). `again`: an earlier apply of this boot may have left a live op on, so one
@@ -382,10 +383,10 @@ public nonisolated enum TweakApplier {
 
 /// A restarted SpringBoard answers the agent's frontmost again (SpringBoardServices is its); a minute at most.
 private nonisolated func springBoardBack(_ guest: GuestServices) async throws {
-    try await Task.sleep(for: TweakApplier.respringPause)
+    try await Task.hostSleep(for: TweakApplier.respringPause)
     for _ in 0..<30 {
         if let front = try? await guest.agent.frontmost(), !front.bundleID.isEmpty { return }
-        try await Task.sleep(for: TweakApplier.respringPause)
+        try await Task.hostSleep(for: TweakApplier.respringPause)
     }
 }
 
