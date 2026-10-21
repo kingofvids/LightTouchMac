@@ -320,7 +320,7 @@
 				A1D0C0DE3B000000000000001,
 				A1D0C0DE3C000000000000001,
 				A1D0C0DE3A000000000000010,
-				EA17D84B3023A55900BDF83E /* XCRemoteSwiftPackageReference "swift-subprocess" */,
+				EA17D84B3023A55900BDF83E /* XCLocalSwiftPackageReference "Packages/SubprocessCompat" */,
 				A1D0C0DE37000000000000001 /* XCRemoteSwiftPackageReference "ZIPFoundation" */,
 				A1D0C0DE3E000000000000001 /* XCRemoteSwiftPackageReference "swift-perception" */,
 				A1D0C0DE3D000000000000001 /* XCRemoteSwiftPackageReference "Sparkle" */,
@@ -690,14 +690,6 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		EA17D84B3023A55900BDF83E /* XCRemoteSwiftPackageReference "swift-subprocess" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/swiftlang/swift-subprocess";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.0.0;
-			};
-		};
 		A1D0C0DE37000000000000001 /* XCRemoteSwiftPackageReference "ZIPFoundation" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/weichsel/ZIPFoundation.git";
@@ -730,6 +722,7 @@
 		A1D0C0DE36000000000000001 = {isa = XCLocalSwiftPackageReference; relativePath = Packages/DeviceRuntime; };
 		A1D0C0DE3B000000000000001 = {isa = XCLocalSwiftPackageReference; relativePath = Packages/DeviceServices; };
 		A1D0C0DE3C000000000000001 = {isa = XCLocalSwiftPackageReference; relativePath = Packages/LightTouchCore; };
+		EA17D84B3023A55900BDF83E /* XCLocalSwiftPackageReference "Packages/SubprocessCompat" */ = {isa = XCLocalSwiftPackageReference; relativePath = Packages/SubprocessCompat; };
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -738,7 +731,7 @@
 		A1D0C0DE35000000000000002 = {isa = XCSwiftPackageProductDependency; package = A1D0C0DE35000000000000001; productName = HostRuntime; };
 		EA17D84C3023A55900BDF83E /* Subprocess */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = EA17D84B3023A55900BDF83E /* XCRemoteSwiftPackageReference "swift-subprocess" */;
+			package = EA17D84B3023A55900BDF83E /* XCLocalSwiftPackageReference "Packages/SubprocessCompat" */;
 			productName = Subprocess;
 		};
 		A1D0C0DE3C000000000000002 = {isa = XCSwiftPackageProductDependency; package = A1D0C0DE3C000000000000001; productName = LightTouchCore; };
