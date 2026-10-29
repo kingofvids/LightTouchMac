@@ -13,6 +13,7 @@
 // patched offline afterwards with HFSPlusVolume.setOwner. Write files in place (never replace them by
 // rename) so an existing file keeps its catalog record and Apple's owner.
 
+import HostCompat
 import Foundation
 
 public enum VolumeMount {
@@ -74,7 +75,7 @@ public enum VolumeMount {
                     unmounted = true
                     break
                 }
-                try await Task.sleep(for: .milliseconds(500))
+                try await Task.hostSleep(for: .milliseconds(500))
             }
             var checked: (ok: Bool, output: String) = (false, "")
             do {
@@ -175,10 +176,10 @@ public enum VolumeMount {
         var counts: [UInt32: UInt32] = [:]
         for i in stride(from: 0, to: lines.count, by: 2) {
             guard
-                let id = lines[i].wholeMatch(of: /Incorrect folder count in a directory \(id = (\d+)\)/).flatMap({
-                    UInt32($0.1)
+                let id = lines[i].hostWholeMatch(#"Incorrect folder count in a directory \(id = (\d+)\)"#).flatMap({
+                    UInt32($0[1])
                 }),
-                let n = lines[i + 1].wholeMatch(of: /\(It should be (\d+) instead of \d+\)/).flatMap({ UInt32($0.1) })
+                let n = lines[i + 1].hostWholeMatch(#"\(It should be (\d+) instead of \d+\)"#).flatMap({ UInt32($0[1]) })
             else { return nil }
             counts[id] = n
         }

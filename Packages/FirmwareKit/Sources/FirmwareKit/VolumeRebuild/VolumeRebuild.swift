@@ -20,6 +20,7 @@
 // page; each user page's copy with the highest (USN, vpn) wins; index pages, BTOCs and the control
 // vblocks (the CX01 context) are ignored. MBR partition 1 is "system", 2 is "data".
 
+import HostCompat
 import Foundation
 
 public enum VolumeRebuild {
@@ -107,8 +108,8 @@ public enum VolumeRebuild {
                     try pwriteAll(fd, buf, n * page, out)
                     count += 1
                 }
-            } catch { tally.lock.withLock { tally.failure = tally.failure ?? error } }
-            tally.lock.withLock { tally.written += count }
+            } catch { tally.lock.hostWithLock { tally.failure = tally.failure ?? error } }
+            tally.lock.hostWithLock { tally.written += count }
         }
         if let failure = tally.failure { throw failure }
         let written = tally.written

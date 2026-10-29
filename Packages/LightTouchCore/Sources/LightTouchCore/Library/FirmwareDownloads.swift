@@ -9,6 +9,7 @@
 // doesn't resolve or answer) or serves other bytes moves the download on to
 // the entry's next source (FirmwareWire.Entry.Source.urls); the last one's failure is the download's.
 
+import HostCompat
 import FirmwareSchema
 import Foundation
 
@@ -71,7 +72,7 @@ public nonisolated final class FirmwareDownloads: NSObject, URLSessionDownloadDe
     public func start(sha1: String, url: URL) throws {
         try StorageLocations.privateDirectory(store.downloads)
         guard let session else { throw FirmwareError.failed("The download couldn’t start.") }
-        lock.withLock { _ = cancelling.remove(sha1) }
+        lock.hostWithLock { _ = cancelling.remove(sha1) }
         let saved = store.resumeData(sha1)
         let task: URLSessionDownloadTask
         if let data = try? Data(contentsOf: saved) {
@@ -86,7 +87,7 @@ public nonisolated final class FirmwareDownloads: NSObject, URLSessionDownloadDe
 
     /// Stops the download and deletes its resume data; `.cancelled` follows.
     public func cancel(sha1: String) {
-        lock.withLock { _ = cancelling.insert(sha1) }
+        lock.hostWithLock { _ = cancelling.insert(sha1) }
         session?.getAllTasks { [self] tasks in
             for task in tasks where task.taskDescription == sha1 { task.cancel() }
             try? FileManager.default.removeItem(at: store.resumeData(sha1))
@@ -99,7 +100,7 @@ public nonisolated final class FirmwareDownloads: NSObject, URLSessionDownloadDe
         let urls = sources(sha1)
         guard let session, let failed = task.originalRequest?.url, let index = urls.firstIndex(of: failed),
             index + 1 < urls.count,
-            !lock.withLock({ cancelling.contains(sha1) })
+            !lock.hostWithLock({ cancelling.contains(sha1) })
         else { return false }
         let url = urls[index + 1]
         logEvent(
@@ -194,7 +195,7 @@ public nonisolated final class FirmwareDownloads: NSObject, URLSessionDownloadDe
         let nsError = error as NSError
         // A cancel reports through its own completion and keeps nothing.
         if nsError.domain == NSURLErrorDomain, nsError.code == NSURLErrorCancelled,
-            lock.withLock({ cancelling.contains(sha1) })
+            lock.hostWithLock({ cancelling.contains(sha1) })
         {
             return
         }

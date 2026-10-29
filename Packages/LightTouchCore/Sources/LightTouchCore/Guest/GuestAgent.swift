@@ -1,3 +1,4 @@
+import HostCompat
 import DeviceRuntime
 import Foundation
 import HostServiceWire
@@ -48,8 +49,8 @@ public nonisolated final class GuestAgentCache: @unchecked Sendable {
     private let lock = NSLock()
     private var value: GuestAgentCapabilities?
     public var capabilities: GuestAgentCapabilities? {
-        get { lock.withLock { value } }
-        set { lock.withLock { value = newValue } }
+        get { lock.hostWithLock { value } }
+        set { lock.hostWithLock { value = newValue } }
     }
     public func reset() { capabilities = nil }
 }
@@ -283,7 +284,7 @@ public nonisolated struct GuestAgent: Sendable {
         let deadline = Date().addingTimeInterval(seconds)
         while !Task.isCancelled, Date() < deadline {
             if isAlive { return true }
-            try? await Task.sleep(for: .milliseconds(250))
+            try? await Task.hostSleep(for: .milliseconds(250))
         }
         return !Task.isCancelled && isAlive
     }

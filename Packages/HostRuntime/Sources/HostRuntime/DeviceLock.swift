@@ -2,6 +2,7 @@
 // (Recipe, PreparedBase, StoppedVolumeEdit) and everything else reads it through this one type. The keys are
 // the on-disk format (qemu-ios's Python reads them too); members this type doesn't name are kept as they are.
 
+import HostCompat
 import Foundation
 
 /// A JSON value, for the lock's members that carry free-form records (inputs, outputs, fit, derived, ...).
@@ -198,7 +199,7 @@ public struct DeviceLock: Codable, Sendable, Equatable {
         ) {
             $0[$1] = attributes[$1] as? AnyHashable
         }
-        if let hit = cacheLock.withLock({ cache[url.path] }), hit.stamp == stamp { return hit.lock }
+        if let hit = cacheLock.hostWithLock({ cache[url.path] }), hit.stamp == stamp { return hit.lock }
         let data: Data
         do { data = try Data(contentsOf: url) } catch let error as CocoaError
             where error.code == .fileReadNoSuchFile || error.code == .fileNoSuchFile
@@ -213,7 +214,7 @@ public struct DeviceLock: Codable, Sendable, Equatable {
                 ]
             )
         }
-        cacheLock.withLock { cache[url.path] = (stamp, lock) }
+        cacheLock.hostWithLock { cache[url.path] = (stamp, lock) }
         return lock
     }
 

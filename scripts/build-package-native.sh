@@ -53,9 +53,9 @@ else
     STATIC="$ROOT/static/prefix"
 fi
 P="$ROOT/prefix"
-export MACOSX_DEPLOYMENT_TARGET=14.0
-export CFLAGS="$ARCH_FLAG-O2 -mmacosx-version-min=14.0" CXXFLAGS="$ARCH_FLAG-O2 -mmacosx-version-min=14.0"
-export LDFLAGS="$ARCH_FLAG-mmacosx-version-min=14.0" CC=/usr/bin/clang CXX=/usr/bin/clang++
+export MACOSX_DEPLOYMENT_TARGET=12.0
+export CFLAGS="$ARCH_FLAG-O2 -mmacosx-version-min=12.0" CXXFLAGS="$ARCH_FLAG-O2 -mmacosx-version-min=12.0"
+export LDFLAGS="$ARCH_FLAG-mmacosx-version-min=12.0" CC=/usr/bin/clang CXX=/usr/bin/clang++
 export PKG_CONFIG_LIBDIR="$P/lib/pkgconfig" PKG_CONFIG_PATH=
 # Some Darwin libtool configure probes return an empty ARG_MAX. Avoid its
 # broken partial-link fallback (which loses private symbols).
@@ -176,8 +176,8 @@ LTM_ARCH="$ARCH" bash "$SRC/scripts/build-iboot32patcher.sh" "$ROOT/src" "$ROOT/
     --disable-everything --disable-autodetect --disable-programs --disable-doc \
     --disable-avdevice --disable-avformat --disable-avfilter --disable-swscale --disable-swresample \
     --enable-decoder=aac,mp3,alac,h264 --enable-shared --disable-static --install-name-dir=@rpath \
-    --extra-cflags="$ARCH_FLAG-mmacosx-version-min=14.0" \
-    --extra-ldflags="$ARCH_FLAG-mmacosx-version-min=14.0 -Wl,-rpath,@loader_path" \
+    --extra-cflags="$ARCH_FLAG-mmacosx-version-min=12.0" \
+    --extra-ldflags="$ARCH_FLAG-mmacosx-version-min=12.0 -Wl,-rpath,@loader_path" \
     && make -j"$JOBS" && make install DESTDIR="$ROOT/stage") && restage
 mkdir -p "$P/share/licenses/ffmpeg"
 cp ffmpeg-9.0.1/COPYING.LGPLv2.1 "$P/share/licenses/ffmpeg/"
@@ -193,8 +193,8 @@ mkdir "$ROOT/qemu-build"
 cd "$ROOT/qemu-build"
 "$QEMU/configure" ${QEMU_CROSS[@]+"${QEMU_CROSS[@]}"} --target-list=arm-softmmu --without-default-features --enable-cocoa --enable-coreaudio --enable-pixman --enable-slirp --enable-nettle --disable-pie \
     --python="${QEMU_PYTHON:-python3.12}" \
-    --extra-cflags="-I$STATIC/include -mmacosx-version-min=14.0 -fmacro-prefix-map=$QEMU/= -fmacro-prefix-map=$ROOT/qemu-build/=" \
-    --extra-ldflags="-L$STATIC/lib -lcrypto -mmacosx-version-min=14.0"
+    --extra-cflags="-I$STATIC/include -mmacosx-version-min=12.0 -fmacro-prefix-map=$QEMU/= -fmacro-prefix-map=$ROOT/qemu-build/=" \
+    --extra-ldflags="-L$STATIC/lib -lcrypto -mmacosx-version-min=12.0"
 ninja -j"$JOBS" qemu-system-arm
 # make-dylib-macos.sh compiles the entry files itself: CCC_OVERRIDE_OPTIONS gives its clang the same prefix maps.
 CCC_OVERRIDE_OPTIONS="+-fmacro-prefix-map=$QEMU/= +-fmacro-prefix-map=$ROOT/qemu-build/=" \
@@ -213,7 +213,7 @@ if cc.has_function('pipe2', prefix: '#include <unistd.h>')
 endif
 assert(cc.has_function('pipe', prefix: '#include <unistd.h>'))
 EOF
-(unset LDFLAGS CXXFLAGS; CC=/usr/bin/clang CFLAGS='-O2 -mmacosx-version-min=14.0' LDFLAGS='-mmacosx-version-min=14.0' \
+(unset LDFLAGS CXXFLAGS; CC=/usr/bin/clang CFLAGS='-O2 -mmacosx-version-min=12.0' LDFLAGS='-mmacosx-version-min=12.0' \
     "$MESON" setup "$GLIB_CHECK/probe-build" "$GLIB_CHECK/probe" --wrap-mode=nodownload > "$GLIB_CHECK/probe.log" 2>&1) \
     || { cat "$GLIB_CHECK/probe.log" >&2; echo "the Meson/SDK probe selects pipe2 for macOS 14" >&2; exit 1; }
 ! grep -Eq '^[[:space:]]*#[[:space:]]*define[[:space:]]+HAVE_PIPE2\b' "$ROOT/build/glib-out/config.h" \
@@ -242,7 +242,7 @@ int main(void)
 }
 EOF
 # shellcheck disable=SC2046
-/usr/bin/clang -arch "$ARCH" -mmacosx-version-min=14.0 -Wl,-no_weak_imports "$GLIB_CHECK/pipe-check.c" -o "$GLIB_CHECK/pipe-check" \
+/usr/bin/clang -arch "$ARCH" -mmacosx-version-min=12.0 -Wl,-no_weak_imports "$GLIB_CHECK/pipe-check.c" -o "$GLIB_CHECK/pipe-check" \
     $(PKG_CONFIG_PATH= PKG_CONFIG_LIBDIR="$P/lib/pkgconfig:$P/share/pkgconfig" pkg-config --static --cflags --libs glib-2.0 \
       | sed "s|-lglib-2.0|$P/lib/libglib-2.0.a|")
 no_pipe2 "$GLIB_CHECK/pipe-check"

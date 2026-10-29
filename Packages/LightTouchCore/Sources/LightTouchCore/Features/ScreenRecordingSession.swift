@@ -1,3 +1,4 @@
+import HostCompat
 import CoreGraphics
 import Foundation
 
@@ -163,7 +164,7 @@ public final class ScreenRecordingSession {
                     onBeganRecording?()
                 }
                 while !stopRequested {
-                    try await Task.sleep(for: .milliseconds(canvasSize == nil ? 33 : 16))
+                    try await Task.hostSleep(for: .milliseconds(canvasSize == nil ? 33 : 16))
                     guard !stopRequested else { break }
                     try await writer.append(try frame(), seconds: ProcessInfo.processInfo.systemUptime - startedAt)
                     let seconds = Int(ProcessInfo.processInfo.systemUptime - startedAt)

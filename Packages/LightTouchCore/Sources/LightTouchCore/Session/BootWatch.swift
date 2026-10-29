@@ -1,10 +1,11 @@
 // Never "Booting…" forever: the boot deadline, recovery mode on serial, a boot that can't be built, and the
 // helper's death all end a boot as `.dead` with a named reason (the row and the overlay show it).
 
+import HostCompat
 import DeviceRuntime
 import Foundation
 import HostRuntime
-import Observation
+import Perception
 
 /// What the boot watch reads and changes on the session.
 public protocol BootWatchHost: AnyObject {
@@ -42,7 +43,7 @@ public enum BootEnd: Equatable {
     case helperGone
 }
 
-@Observable public final class BootWatch {
+@Perceptible public final class BootWatch {
     private unowned let host: BootWatchHost
     public init(host: BootWatchHost) { self.host = host }
 
@@ -68,7 +69,7 @@ public enum BootEnd: Equatable {
     /// Why the helper died, for the row and the dead overlay.
     public private(set) var deathReason: String?
     /// The board's boot budget (shorter in tests).
-    @ObservationIgnored lazy var budget: TimeInterval = host.profile.bootBudget
+    @PerceptionIgnored lazy var budget: TimeInterval = host.profile.bootBudget
     /// How long an aborted boot's helper gets to exit before it is killed.
     var haltBudget = ShutdownLadder.Budgets().halt
 
@@ -115,7 +116,7 @@ public enum BootEnd: Equatable {
         task = Task { [weak self] in
             var spent = BootBudget(.milliseconds(Int(budget * 1000)))
             while true {
-                do { try await Task.sleep(for: .milliseconds(100), clock: .suspending) } catch { return }
+                do { try await Task.hostSleep(for: .milliseconds(100), clock: .suspending) } catch { return }
                 guard let self, generation == host.bootScope.generation, !host.bootFinished else { return }
                 if spent.tick(counting: host.countsBootTime) { break }
             }

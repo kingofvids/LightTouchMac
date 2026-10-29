@@ -7,11 +7,11 @@ import DeviceRuntime
 import Foundation
 import HostRuntime
 import HostServiceWire
-import Observation
+import Perception
 
-@Observable public final class DeviceWebProxy {
-    @ObservationIgnored private let directoryNow: () -> URL
-    @ObservationIgnored private let shortName: String
+@Perceptible public final class DeviceWebProxy {
+    @PerceptionIgnored private let directoryNow: () -> URL
+    @PerceptionIgnored private let shortName: String
 
     /// `directory`: read at each use, as the device's record (its storage) can be refreshed before a boot.
     public init(directory: @escaping () -> URL, shortName: String) {
@@ -20,15 +20,15 @@ import Observation
     }
     public var directory: URL { directoryNow() }
 
-    @ObservationIgnored public private(set) lazy var configuration = WebProxyConfiguration.load(from: directory)
+    @PerceptionIgnored public private(set) lazy var configuration = WebProxyConfiguration.load(from: directory)
     /// Where the guest's proxy settings are: the proxy editor's line.
     public private(set) var status: WebProxyStatus = .waiting
     /// Bumped by every change; the foreground watch applies each one once.
-    @ObservationIgnored private(set) var revision = 0
+    @PerceptionIgnored private(set) var revision = 0
     /// This boot's routing is written: the proxy can be changed.
     public private(set) var available = false
     /// This boot's proxy (BootConfig.webProxy): the helper serves it; nil when the routing can't be written.
-    @ObservationIgnored public private(set) var endpoint: WebProxyEndpoint?
+    @PerceptionIgnored public private(set) var endpoint: WebProxyEndpoint?
 
     public func configure(_ value: WebProxyConfiguration) throws {
         guard available else {

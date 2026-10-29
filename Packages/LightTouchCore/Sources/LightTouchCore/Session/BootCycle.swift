@@ -2,6 +2,7 @@
 // started again in the order the first boot started them. A device without a guest to sync through, or whose
 // helper is gone, gets a fresh helper instead (DeviceSessionHost.restart).
 
+import HostCompat
 import DeviceRuntime
 import Foundation
 import HostRuntime
@@ -99,7 +100,7 @@ public final class BootCycle {
     /// The guest agent's sync before a restart, at most.
     var syncBudget: Double = 20
     /// How long a power-on waits for the PMU reset to clear the shutdown latch.
-    var latchWait: Duration = .seconds(5)
+    var latchWait: HostDuration = .seconds(5)
 
     private var isPoweredOff: Bool { host.state == .poweredOff }
 
@@ -209,14 +210,14 @@ public final class BootCycle {
             let host = host
             await host.workers.task?.value
             guard !Task.isCancelled, generation == host.bootScope.generation else { return }
-            let deadline = SuspendingClock.now + latchWait
+            let deadline = HostSuspendingClock.now + latchWait
             // system_reset is queued. Wait until the PMU reset clears its
             // shutdown latch (the helper republishes it at 20 Hz) before
             // resuming the stopped VM.
-            while host.status?.shutdownConfirmed == true, SuspendingClock.now < deadline {
+            while host.status?.shutdownConfirmed == true, HostSuspendingClock.now < deadline {
                 // Cancelled (a Restart or a halt retired the boot): end now. A swallowed cancellation spun here,
                 // holding the main actor and `poweringOn`, until the latch wait ran out.
-                do { try await Task.sleep(for: .milliseconds(50)) } catch { return }
+                do { try await Task.hostSleep(for: .milliseconds(50)) } catch { return }
             }
             guard !Task.isCancelled, generation == host.bootScope.generation else { return }
             guard host.status?.shutdownConfirmed == false, !host.state.isDead else {

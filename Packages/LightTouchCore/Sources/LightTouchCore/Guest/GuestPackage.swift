@@ -1,3 +1,4 @@
+import HostCompat
 import CryptoKit
 import DeviceRuntime
 import Foundation
@@ -177,17 +178,17 @@ public nonisolated enum GuestPackage {
 
     /// Healthy for this long (UI up, the agent or lockdown answering) makes the
     /// reported package good; no report by then means no loader.
-    public static let goodAfter: Duration = .seconds(10), legacyAfter: Duration = .seconds(30)
+    public static let goodAfter: HostDuration = .seconds(10), legacyAfter: HostDuration = .seconds(30)
     /// A package that isn't healthy this long after boot is bad.
-    public static let badAfter: Duration = .seconds(300)
+    public static let badAfter: HostDuration = .seconds(300)
 
     /// This boot's verdict so far; nil: keep watching. A restored session never
     /// re-runs the loader, so it has no report and says nothing about tools. Only
     /// a package that isn't the seed or the last good one can be judged bad.
     public static func verdict(
         report: GuestPackageReport?,
-        healthyFor: Duration,
-        elapsed: Duration,
+        healthyFor: HostDuration,
+        elapsed: HostDuration,
         record: DeviceInstance.Guest?,
         restored: Bool
     ) -> Verdict? {
@@ -326,7 +327,7 @@ public struct GuestPackageSession {
     }
 
     private let offer: GuestPackage.Offer
-    private var healthySince: Duration?
+    private var healthySince: HostDuration?
     private var seen: GuestPackageReport?
     private var finished = false
 
@@ -334,7 +335,7 @@ public struct GuestPackageSession {
 
     /// Elapsed time is measured by the owner's monotonic clock, never the RTC
     /// or wall clock (which can change during timezone synchronization).
-    public mutating func observe(_ observation: Observation, elapsed: Duration) -> Update? {
+    public mutating func observe(_ observation: Observation, elapsed: HostDuration) -> Update? {
         guard !finished else { return nil }
         let report = observation.report
         let changedReport = report != seen ? report : nil
@@ -366,16 +367,16 @@ public struct GuestPackageSession {
     /// a verdict even if the caller still has a valid status block.
     public static func watch(
         offer: GuestPackage.Offer,
-        interval: Duration = .seconds(1),
+        interval: HostDuration = .seconds(1),
         sample: () -> Observation?,
         publish: (Update) -> Void
     ) async {
-        let started = ContinuousClock.now
+        let started = HostContinuousClock.now
         var session = Self(offer: offer)
         while !Task.isCancelled {
-            do { try await Task.sleep(for: interval) } catch { return }
+            do { try await Task.hostSleep(for: interval) } catch { return }
             guard !Task.isCancelled, let observation = sample(),
-                let update = session.observe(observation, elapsed: ContinuousClock.now - started)
+                let update = session.observe(observation, elapsed: HostContinuousClock.now - started)
             else { return }
             guard !Task.isCancelled else { return }
             publish(update)

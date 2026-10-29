@@ -1,11 +1,12 @@
 // From the boot until SpringBoard answers over lockdown: the startup status the window shows, how far the boot has
 // provably got (BootStage), and the one display wake a boot gets before input is enabled.
 
+import HostCompat
 import DeviceRuntime
 import Foundation
 import HostRuntime
 import HostServiceWire
-import Observation
+import Perception
 
 /// What the readiness watch reads and does on the session.
 public protocol ReadinessHost: AnyObject {
@@ -31,13 +32,13 @@ public protocol ReadinessHost: AnyObject {
     func readyForInput()
 }
 
-@Observable public final class ReadinessWatch {
+@Perceptible public final class ReadinessWatch {
     private unowned let host: ReadinessHost
     private let notices: DeviceNotices
     /// Fired with the old value when `preparingDevice` is set (the startup clock).
-    @ObservationIgnored public var onPreparingChange: ((Bool) -> Void)?
+    @PerceptionIgnored public var onPreparingChange: ((Bool) -> Void)?
     /// The board's boot budget (shorter in tests).
-    @ObservationIgnored var budget: Duration
+    @PerceptionIgnored var budget: HostDuration
 
     public init(host: ReadinessHost, notices: DeviceNotices) {
         self.host = host
@@ -74,7 +75,7 @@ public protocol ReadinessHost: AnyObject {
         set { host.bootScope[.readiness] = newValue }
     }
     /// Bumped by each start(): a watch clears `preparingDevice` as it ends unless a later start() owns it.
-    @ObservationIgnored private var run = 0
+    @PerceptionIgnored private var run = 0
     public func cancel() { task?.cancel() }
     /// Waits for this boot's watch (a restart lets it finish first).
     public var current: Task<Void, Never>? { task }
@@ -117,7 +118,7 @@ public protocol ReadinessHost: AnyObject {
                         notices.report(ReadinessDeadline.notice(shortName: host.profile.shortName), for: .preparation)
                     }
                     if host.isPainting, await host.deviceReady() { break }
-                    try await Task.sleep(for: .milliseconds(250))
+                    try await Task.hostSleep(for: .milliseconds(250))
                 }
                 try Task.checkCancellation()
                 guard generation == host.bootScope.generation else { return }
@@ -157,7 +158,7 @@ public protocol ReadinessHost: AnyObject {
                     logEvent("boot: waking the display after device preparation")
                     host.pressHome()
                     for _ in 0..<20 {
-                        try await Task.sleep(for: .milliseconds(100))
+                        try await Task.hostSleep(for: .milliseconds(100))
                         guard generation == host.bootScope.generation, !host.isDead, !host.shuttingDown else { return }
                         if host.status?.displaySleeping != true { break }
                     }

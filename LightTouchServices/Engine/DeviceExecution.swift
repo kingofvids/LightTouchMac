@@ -2,6 +2,7 @@
 // leaves behind) and the one serial gate per process (DeviceGate). The errors, the timeout knobs and the soft
 // deadline are HostServiceWire's. Foundation only; the offline checks compile this file whole.
 
+import HostCompat
 import Foundation
 import HostServiceWire
 
@@ -37,7 +38,7 @@ func withDeadline<T: Sendable>(
         if !once.resume(result) { AbandonedWork.returned() }
     }
     let watchdog = Task.detached {
-        do { try await Task.sleep(for: .seconds(seconds)) } catch { return }
+        do { try await Task.hostSleep(for: .seconds(seconds)) } catch { return }
         once.resume(
             .failure(DeviceError.timedOut(operation: operation)),
             onWin: {
@@ -80,10 +81,10 @@ nonisolated enum AbandonedWork {
     /// not help. Two in flight is already one more than it serves.
     static let cap = 3
 
-    static var count: Int { lock.withLock { outstanding } }
+    static var count: Int { lock.hostWithLock { outstanding } }
 
     static func abandoned(_ operation: String) {
-        let n = lock.withLock {
+        let n = lock.hostWithLock {
             outstanding += 1
             return outstanding
         }
@@ -91,7 +92,7 @@ nonisolated enum AbandonedWork {
     }
 
     static func returned() {
-        lock.withLock { if outstanding > 0 { outstanding -= 1 } }
+        lock.hostWithLock { if outstanding > 0 { outstanding -= 1 } }
     }
 }
 
@@ -135,7 +136,7 @@ nonisolated private final class LateHandles<H: OpenedHandles>: @unchecked Sendab
     private var handles: H?
     private var abandoned = false
     func store(_ opened: H) {
-        let discard = lock.withLock {
+        let discard = lock.hostWithLock {
             if abandoned { return true }
             handles = opened
             return false
@@ -143,7 +144,7 @@ nonisolated private final class LateHandles<H: OpenedHandles>: @unchecked Sendab
         if discard { opened.free() }
     }
     func take(abandon: Bool = false) -> H? {
-        lock.withLock {
+        lock.hostWithLock {
             abandoned = abandon
             defer { handles = nil }
             return handles
@@ -207,7 +208,7 @@ actor DeviceGate {
     /// its endpoint must stay selected until every abandoned worker returns.
     /// Same-device work remains available below the abandonment cap.
     private static func point(at socket: String) throws {
-        try socketLock.withLock {
+        try socketLock.hostWithLock {
             if let currentSocket, currentSocket != socket, AbandonedWork.count > 0 {
                 throw DeviceError.endpointBusy
             }

@@ -3,6 +3,8 @@
 // Network settings are the device's (EmulatorController.carrierSettings, applied at every boot); calls and SMS go
 // straight to the modem (qemu-ios ios-baseband's actions), and its state is polled once a second while visible.
 
+import HostCompat
+import Perception
 import Cocoa
 import CoreLocation
 import HostRuntime
@@ -13,11 +15,12 @@ import SwiftUI
 extension EmulatorController: CarrierBackend {}
 
 struct CarrierPanel: View {
-    @Bindable var model: CarrierPanelModel
+    @Perception.Bindable var model: CarrierPanelModel
     @State private var camera = MapCameraPosition.automatic
     @State private var macLocation = MacLocation()
 
     var body: some View {
+        WithPerceptionTracking {
         Form {
             Section {
                 TextField("Carrier", text: $model.carrierName)
@@ -112,7 +115,7 @@ struct CarrierPanel: View {
                             }
                     }
                     .onAppear { center(on: model.settings.location) }
-                    .onChange(of: model.settings.location) { center(on: model.settings.location) }
+                    .compatOnChange(of: model.settings.location) { center(on: model.settings.location) }
                     LabeledContent("Coordinates") {
                         HStack {
                             TextField("Latitude", text: $model.latitude).labelsHidden()
@@ -143,16 +146,17 @@ struct CarrierPanel: View {
                 Text(message).font(.callout).foregroundStyle(.secondary)
             }
         }
-        .formStyle(.grouped)
+        .compatGroupedForm()
         .frame(minWidth: 360, idealWidth: 380, minHeight: 520)
         .task {
             // ~1 Hz while the panel is on screen; SwiftUI cancels it when the view goes away.
             while !Task.isCancelled {
                 model.poll()
-                try? await Task.sleep(for: .seconds(1))
+                try? await Task.hostSleep(for: .seconds(1))
             }
             if model.walking { model.toggleWalk() }  // the walk steps with the poll: it ends with it
         }
+    }
     }
 }
 

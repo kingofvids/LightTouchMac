@@ -3,6 +3,7 @@
 // the poll missed (a buzz shorter than a poll) still plays, for `missedPulse`. render() fills the audio thread's
 // buffers with a motor's buzz, ramped in and out so it neither clicks nor cuts off.
 
+import HostCompat
 import Foundation
 import os
 
@@ -24,14 +25,14 @@ nonisolated public final class VibrationBuzz: Sendable {
         var level = 0.0
         var phase = 0.0
     }
-    private let state = OSAllocatedUnfairLock(initialState: State())
+    private let state = HostLock(initialState: State())
 
     public init() {}
 
     /// One status read: the motor runs now, and its starts so far. A count that goes down (a restarted helper) is a
     /// new baseline, not a buzz.
     public func observe(running: Bool, pulses: UInt64) {
-        state.withLock {
+        state.hostWithLock {
             if let last = $0.pulses, pulses > last, !running {
                 $0.burst = max($0.burst, Int(Self.missedPulse * Self.sampleRate))
             }
@@ -41,7 +42,7 @@ nonisolated public final class VibrationBuzz: Sendable {
     }
 
     /// Nothing to play and nothing still fading out: the output can stop.
-    public var isIdle: Bool { state.withLock { !$0.running && $0.burst == 0 && $0.level == 0 } }
+    public var isIdle: Bool { state.hostWithLock { !$0.running && $0.burst == 0 && $0.level == 0 } }
 
     /// Mono samples at `sampleRate`, from the audio thread.
     public func render(_ samples: UnsafeMutableBufferPointer<Float>) {

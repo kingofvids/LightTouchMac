@@ -6,14 +6,14 @@
 //
 // Dependencies are pinned to exact versions and recorded with their licenses in build-support/dependencies.json
 // (BuildTools' dependency sources manifest): ZIPFoundation (IPSW members), MachOKit (Mach-O headers, fat
-// files, code signatures), swift-subprocess (`diskutil image` / `hdiutil` through DiskImage), Unrar.swift (a "rar"
+// files, code signatures), SubprocessCompat (a swift-subprocess subset on Foundation.Process; `diskutil image` / `hdiutil` through DiskImage), Unrar.swift (a "rar"
 // source's IPSW: RARLAB's UnRAR, extraction only), swift-argument-parser (the firmwarekit command
 // lines, FirmwareSchema's FirmwareCommand).
 import PackageDescription
 
 let package = Package(
     name: "FirmwareKit",
-    platforms: [.macOS(.v13)],
+    platforms: [.macOS(.v12)],
     products: [
         .library(name: "FirmwareKit", targets: ["FirmwareKit"]),
         .library(name: "FirmwareSchema", type: .static, targets: ["FirmwareSchema"]),
@@ -23,7 +23,8 @@ let package = Package(
         .package(path: "../HostRuntime"),
         .package(url: "https://github.com/weichsel/ZIPFoundation.git", exact: "0.9.20"),
         .package(url: "https://github.com/p-x9/MachOKit.git", exact: "0.53.0"),
-        .package(url: "https://github.com/swiftlang/swift-subprocess.git", exact: "1.0.0"),
+        .package(path: "../SubprocessCompat"),
+        .package(path: "../HostCompat"),
         .package(url: "https://github.com/mtgto/Unrar.swift.git", exact: "0.5.4"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", exact: "1.8.2"),
     ],
@@ -40,7 +41,8 @@ let package = Package(
                 .product(name: "HostRuntime", package: "HostRuntime"),
                 .product(name: "ZIPFoundation", package: "ZIPFoundation"),
                 .product(name: "MachOKit", package: "MachOKit"),
-                .product(name: "Subprocess", package: "swift-subprocess"),
+                .product(name: "Subprocess", package: "SubprocessCompat"),
+                .product(name: "HostCompat", package: "HostCompat"),
                 .product(name: "Unrar", package: "Unrar.swift"),
             ]
         ),

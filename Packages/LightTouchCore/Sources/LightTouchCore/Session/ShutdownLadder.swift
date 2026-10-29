@@ -10,10 +10,11 @@
 // guest still starting up can't power itself off (no SpringBoard, no agent yet): Shut Down then is Stop, and the boot
 // ends at once instead of carrying on under "Stopping…" until the shutdown budget forced it.
 
+import HostCompat
 import DeviceRuntime
 import Foundation
 import HostRuntime
-import Observation
+import Perception
 
 /// What Stop and Shut Down read and do on the session.
 public protocol ShutdownHost: AnyObject {
@@ -43,7 +44,7 @@ public enum ShutdownOutcome: Equatable {
     case timedOut
 }
 
-@Observable public final class ShutdownLadder {
+@Perceptible public final class ShutdownLadder {
     public struct Budgets {
         public init() {}
         /// SIGTERM to the kill.
@@ -111,9 +112,9 @@ public enum ShutdownOutcome: Equatable {
         let budget = budgets.shutdown
         let task = Task { [weak self] () -> ShutdownOutcome in
             // The Mac's sleep doesn't count against the guest.
-            let deadline = SuspendingClock.now + .seconds(budget)
-            while let self, SuspendingClock.now < deadline, !self.isPoweredOff, !self.isDead, self.haltTask == nil {
-                try? await Task.sleep(for: .milliseconds(200))
+            let deadline = HostSuspendingClock.now + .seconds(budget)
+            while let self, HostSuspendingClock.now < deadline, !self.isPoweredOff, !self.isDead, self.haltTask == nil {
+                try? await Task.hostSleep(for: .milliseconds(200))
             }
             guard let self else { return .timedOut }
             // A Force Stop that took over owns the step until its halt ends.

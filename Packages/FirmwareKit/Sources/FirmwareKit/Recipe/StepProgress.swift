@@ -8,6 +8,7 @@
 //   p.measure = { hashed / total }             // optional, for this step only
 //   p.finish()                                 // the last step's 1.0
 
+import HostCompat
 import Foundation
 
 /// What one step expects: its seconds on a recent Mac, what to say, and (boots) the serial-log lines it passes.
@@ -122,15 +123,15 @@ final class StepProgress: @unchecked Sendable {
         self.major = major
         self.work = work
         Thread.detachNewThread { [self] in
-            while done.wait(timeout: .now() + 1) == .timedOut { lock.withLock { tick() } }
+            while done.wait(timeout: .now() + 1) == .timedOut { lock.hostWithLock { tick() } }
             stopped.signal()
         }
     }
 
     /// This step's own fraction (0...1), e.g. bytes hashed; the plan's time estimate otherwise.
     var measure: (@Sendable () -> Double)? {
-        get { lock.withLock { measured } }
-        set { lock.withLock { measured = newValue } }
+        get { lock.hostWithLock { measured } }
+        set { lock.hostWithLock { measured = newValue } }
     }
 
     /// The firmware's iOS major version: picks the seal boot's plan (StepPlan.plan).
@@ -138,7 +139,7 @@ final class StepProgress: @unchecked Sendable {
 
     /// Ends the current step with 1.0, then emits the step event and the new step's first progress.
     func next(index: Int, name: String) {
-        lock.withLock {
+        lock.hostWithLock {
             end()
             emit(.step(index: index, name: name))
             let plan = StepPlan.plan(name, major: major)
@@ -153,7 +154,7 @@ final class StepProgress: @unchecked Sendable {
     }
 
     /// The last step's 1.0.
-    func finish() { lock.withLock { end() } }
+    func finish() { lock.hostWithLock { end() } }
 
     /// Stops the heartbeat; no events after it returns.
     func stop() {
@@ -208,6 +209,6 @@ final class ByteCount: @unchecked Sendable {
     private let total: Int, lock = NSLock()
     private var done = 0
     init(total: Int) { self.total = total }
-    func add(_ n: Int) { lock.withLock { done += n } }
-    var fraction: Double { lock.withLock { total > 0 ? Double(done) / Double(total) : 0 } }
+    func add(_ n: Int) { lock.hostWithLock { done += n } }
+    var fraction: Double { lock.hostWithLock { total > 0 ? Double(done) / Double(total) : 0 } }
 }

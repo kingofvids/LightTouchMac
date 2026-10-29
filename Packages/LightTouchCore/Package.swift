@@ -14,15 +14,18 @@ let settings: [SwiftSetting] = [
 
 let package = Package(
     name: "LightTouchCore",
-    platforms: [.macOS("14.4")],
+    platforms: [.macOS(.v12)],
     products: [.library(name: "LightTouchCore", type: .static, targets: ["LightTouchCore"])],
     dependencies: [
         .package(path: "../HostRuntime"),
         .package(path: "../FirmwareKit"),
         .package(path: "../DeviceServices"),
         .package(path: "../DeviceRuntime"),
-        .package(url: "https://github.com/swiftlang/swift-subprocess.git", exact: "1.0.0"),
+        .package(path: "../SubprocessCompat"),
+        .package(path: "../HostCompat"),
         .package(url: "https://github.com/weichsel/ZIPFoundation.git", exact: "0.9.20"),
+        // Backports @Observable to macOS 12 and 13 (Observation needs 14). On 14+ it forwards to Observation.
+        .package(url: "https://github.com/pointfreeco/swift-perception.git", exact: "2.0.9"),
     ],
     targets: [
         .target(
@@ -33,8 +36,10 @@ let package = Package(
                 .product(name: "HostServiceWire", package: "DeviceServices"),
                 .product(name: "HostServiceClient", package: "DeviceServices"),
                 .product(name: "DeviceRuntime", package: "DeviceRuntime"),
-                .product(name: "Subprocess", package: "swift-subprocess"),
+                .product(name: "Subprocess", package: "SubprocessCompat"),
+                .product(name: "HostCompat", package: "HostCompat"),
                 .product(name: "ZIPFoundation", package: "ZIPFoundation"),
+                .product(name: "Perception", package: "swift-perception"),
             ],
             swiftSettings: settings
         ),

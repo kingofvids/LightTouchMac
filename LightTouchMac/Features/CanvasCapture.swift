@@ -1,3 +1,4 @@
+import HostCompat
 import AppKit
 import CoreImage
 import HostRuntime
@@ -95,7 +96,7 @@ final class CanvasCapture {
             try Task.checkCancellation()
             if frames.image != nil { break }
             if let error = frames.failure { throw error }
-            try await Task.sleep(for: .milliseconds(16))
+            try await Task.hostSleep(for: .milliseconds(16))
         }
         guard frames.image != nil else {
             await stop()
@@ -103,7 +104,7 @@ final class CanvasCapture {
         }
         refresh = Task { [weak self] in
             while !Task.isCancelled {
-                do { try await Task.sleep(for: .milliseconds(50)) } catch { return }
+                do { try await Task.hostSleep(for: .milliseconds(50)) } catch { return }
                 guard let self, let stream = self.stream else { return }
                 do {
                     let config = try configuration()
@@ -152,27 +153,27 @@ private nonisolated final class CanvasFrames: NSObject, SCStreamOutput, SCStream
     private var error: Error?
     private var suspended = false
     private var earliestFrame = CMTime.zero
-    var image: CGImage? { lock.withLock { latest } }
-    var failure: Error? { lock.withLock { error } }
+    var image: CGImage? { lock.hostWithLock { latest } }
+    var failure: Error? { lock.hostWithLock { error } }
     func clear() {
-        lock.withLock {
+        lock.hostWithLock {
             latest = nil
             error = nil
             suspended = false
             earliestFrame = .zero
         }
     }
-    func suspend() { lock.withLock { suspended = true } }
+    func suspend() { lock.hostWithLock { suspended = true } }
     func resume() {
-        lock.withLock {
+        lock.hostWithLock {
             earliestFrame = CMClockGetTime(CMClockGetHostTimeClock())
             suspended = false
         }
     }
-    func fail(_ error: Error) { lock.withLock { self.error = error } }
+    func fail(_ error: Error) { lock.hostWithLock { self.error = error } }
     func stream(_ stream: SCStream, didStopWithError error: Error) { fail(error) }
     func stream(_ stream: SCStream, didOutputSampleBuffer sampleBuffer: CMSampleBuffer, of type: SCStreamOutputType) {
-        guard type == .screen, !lock.withLock({ suspended }), sampleBuffer.isValid,
+        guard type == .screen, !lock.hostWithLock({ suspended }), sampleBuffer.isValid,
             let attachments = CMSampleBufferGetSampleAttachmentsArray(sampleBuffer, createIfNecessary: false)
                 as? [[SCStreamFrameInfo: Any]],
             let raw = attachments.first?[.status] as? Int, SCFrameStatus(rawValue: raw) == .complete,
@@ -187,7 +188,7 @@ private nonisolated final class CanvasFrames: NSObject, SCStreamOutput, SCStream
                 colorSpace: CGColorSpace(name: CGColorSpace.sRGB)
             )
         else { return }
-        lock.withLock {
+        lock.hostWithLock {
             if !suspended && CMSampleBufferGetPresentationTimeStamp(sampleBuffer) >= earliestFrame { latest = image }
         }
     }

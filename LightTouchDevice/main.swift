@@ -1,3 +1,4 @@
+import HostCompat
 import DeviceRuntime
 import Foundation
 import HostRuntime
@@ -221,7 +222,7 @@ func decodeConfig<T: Decodable>(_ path: String, _: T.Type) -> T {
     let host = DeviceHost(qemu: qemu, status: status)
     guard takeLease(launch.lease) else { exit(75) }
     installBootStorageAuthority(host)
-    let reader = OSAllocatedUnfairLock<FrameRingReader?>(uncheckedState: nil)
+    let reader = HostLock<FrameRingReader?>(uncheckedState: nil)
     host.onRingChanged = { ring in
         reader.withLockUnchecked {
             $0 = FrameRingReader(status: status, generation: ring.generation, surfaces: ring.surfaces)
@@ -298,18 +299,18 @@ func decodeConfig<T: Decodable>(_ path: String, _: T.Type) -> T {
             case "snapshot":
                 let t0 = Date()
                 host.perform(.snapshotSave(path: p[1]))
-                let result = OSAllocatedUnfairLock<(code: Int, error: String?)>(initialState: (1, nil))
+                let result = HostLock<(code: Int, error: String?)>(initialState: (1, nil))
                 while Date().timeIntervalSince(t0) < 60 {
                     usleep(100_000)
                     let done = DispatchSemaphore(value: 0)
                     host.handle(.snapshotStatus) { reply in
-                        if case .snapshot(let c, let e) = reply { result.withLock { $0 = (c, e) } }
+                        if case .snapshot(let c, let e) = reply { result.hostWithLock { $0 = (c, e) } }
                         done.signal()
                     }
                     done.wait()
-                    if result.withLock({ $0.code }) >= 2 { break }
+                    if result.hostWithLock({ $0.code }) >= 2 { break }
                 }
-                let (code, error) = result.withLock { $0 }
+                let (code, error) = result.hostWithLock { $0 }
                 emit([
                     "event": "snapshot", "status": code, "error": error ?? "", "seconds": Date().timeIntervalSince(t0),
                 ])
@@ -361,24 +362,24 @@ struct OneShotConfig: Decodable {
     /// Whether the serial log showed the stop marker, and whether we asked QEMU to stop: set on the watch thread and
     /// the main queue, read wherever QEMU's exit lands.
     struct Flags { var marker = false, stopping = false }
-    let flags = OSAllocatedUnfairLock(initialState: Flags())
+    let flags = HostLock(initialState: Flags())
     /// exited: QEMU returned by itself (the guest halted), not because we quit it.
     @Sendable func finish(exited: Bool, code: Int32) -> Never {
-        let marker = flags.withLock { $0.marker }
+        let marker = flags.hostWithLock { $0.marker }
         emit([
             "event": "oneshot", "exited": exited, "exitCode": code, "marker": marker,
             "seconds": Date().timeIntervalSince(start),
         ])
         exit(marker ? 0 : exited ? code : 124)
     }
-    host.onExit = { rc in finish(exited: !flags.withLock { $0.stopping }, code: rc) }
+    host.onExit = { rc in finish(exited: !flags.hostWithLock { $0.stopping }, code: rc) }
     onTerminationSignals { _ in qemu.quit() }
     // The preparer (firmwarekit) died: nobody will read this boot's result.
     let parent = getppid()
     let parentWatch = DispatchSource.makeProcessSource(identifier: parent, eventMask: .exit, queue: .main)
     parentWatch.setEventHandler {
         helperLog("parent \(parent) exited")
-        flags.withLock { $0.stopping = true }
+        flags.hostWithLock { $0.stopping = true }
         qemu.quit()
     }
     parentWatch.resume()
@@ -387,7 +388,7 @@ struct OneShotConfig: Decodable {
         exit(75)
     }
     if getppid() != parent || parent == 1 {
-        flags.withLock { $0.stopping = true }
+        flags.hostWithLock { $0.stopping = true }
         qemu.quit()
     }
     Thread.detachNewThread {
@@ -396,15 +397,15 @@ struct OneShotConfig: Decodable {
             if config.stopMarker != nil || config.stopPattern != nil,
                 let text = try? String(contentsOfFile: config.serialLog, encoding: .isoLatin1)
             {
-                if let stop = config.stopMarker, text.contains(stop) { flags.withLock { $0.marker = true } }
+                if let stop = config.stopMarker, text.contains(stop) { flags.hostWithLock { $0.marker = true } }
                 if let pattern = config.stopPattern,
                     text.replacingOccurrences(of: "\n", with: "").range(of: pattern, options: .regularExpression) != nil
                 {
-                    flags.withLock { $0.marker = true }
+                    flags.hostWithLock { $0.marker = true }
                 }
             }
-            if flags.withLock({ $0.marker }) || Date().timeIntervalSince(start) > config.timeout {
-                flags.withLock { $0.stopping = true }
+            if flags.hostWithLock({ $0.marker }) || Date().timeIntervalSince(start) > config.timeout {
+                flags.hostWithLock { $0.stopping = true }
                 qemu.quit()
                 let deadline = Date().addingTimeInterval(5)
                 while !host.hasExited, Date() < deadline { usleep(50_000) }

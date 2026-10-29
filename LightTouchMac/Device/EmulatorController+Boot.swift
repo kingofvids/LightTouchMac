@@ -1,3 +1,4 @@
+import HostCompat
 import Cocoa
 import DeviceRuntime
 import FirmwareSchema
@@ -5,7 +6,7 @@ import HostRuntime
 import HostServiceClient
 import HostServiceWire
 import LightTouchCore
-import Observation
+import Perception
 
 extension EmulatorController {
     // MARK: - Boot
@@ -283,7 +284,7 @@ extension EmulatorController {
         bootScope[.crashReports] = Task { [weak self] in
             while !Task.isCancelled {
                 await self?.logNewCrashes()
-                try? await Task.sleep(for: .seconds(60))
+                try? await Task.hostSleep(for: .seconds(60))
             }
         }
     }

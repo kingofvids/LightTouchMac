@@ -37,6 +37,10 @@
 		A1D0C0DE35000000000000004 = {isa = PBXBuildFile; productRef = A1D0C0DE35000000000000002; };
 		A1D0C0DE36000000000000003 = {isa = PBXBuildFile; productRef = A1D0C0DE36000000000000002; };
 		A1D0C0DE37000000000000003 /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = A1D0C0DE37000000000000002; };
+		A1D0C0DE3E000000000000003 /* Perception in Frameworks */ = {isa = PBXBuildFile; productRef = A1D0C0DE3E000000000000002 /* Perception */; };
+		A1D0C0DE3F000000000000003 /* HostCompat in Frameworks */ = {isa = PBXBuildFile; productRef = A1D0C0DE3F000000000000002 /* HostCompat */; };
+		A1D0C0DE3F000000000000004 /* HostCompat in Frameworks */ = {isa = PBXBuildFile; productRef = A1D0C0DE3F000000000000002 /* HostCompat */; };
+		A1D0C0DE3F000000000000005 /* HostCompat in Frameworks */ = {isa = PBXBuildFile; productRef = A1D0C0DE3F000000000000002 /* HostCompat */; };
 		A1D0C0DE3D000000000000003 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = A1D0C0DE3D000000000000002; };
 		A1D0C0DE36000000000000004 = {isa = PBXBuildFile; productRef = A1D0C0DE36000000000000002; };
 /* End PBXBuildFile section */
@@ -141,12 +145,13 @@
 
 /* Begin PBXFrameworksBuildPhase section */
 		A1D0C0DE3A000000000000007 = {isa = PBXFrameworksBuildPhase; files = (A1D0C0DE3A000000000000020, A1D0C0DE3A000000000000021); };
-		A1D0C0DE32000000000000007 = {isa = PBXFrameworksBuildPhase; files = (A1D0C0DE3B000000000000014); };
+		A1D0C0DE32000000000000007 = {isa = PBXFrameworksBuildPhase; files = (A1D0C0DE3B000000000000014, A1D0C0DE3F000000000000004); };
 		A1D0C0DE3100000000000008 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			files = (
 				A1D0C0DE35000000000000004,
 				A1D0C0DE36000000000000004,
+				A1D0C0DE3F000000000000005 /* HostCompat in Frameworks */,
 			);
 		};
 		EA17D82F30239D9B00BDF83E /* Frameworks */ = {
@@ -160,6 +165,8 @@
 				A1D0C0DE3C000000000000012 /* LightTouchCore in Frameworks */,
 				EA17D84D3023A55900BDF83E /* Subprocess in Frameworks */,
 				A1D0C0DE37000000000000003 /* ZIPFoundation in Frameworks */,
+				A1D0C0DE3E000000000000003 /* Perception in Frameworks */,
+				A1D0C0DE3F000000000000003 /* HostCompat in Frameworks */,
 				A1D0C0DE3D000000000000003 /* Sparkle in Frameworks */,
 			);
 		};
@@ -222,7 +229,7 @@
 			buildRules = (); dependencies = ();
 			fileSystemSynchronizedGroups = (A1D0C0DE3200000000000000B);
 			name = LightTouchServices; productName = LightTouchServices;
-			packageProductDependencies = (A1D0C0DE3B000000000000004);
+			packageProductDependencies = (A1D0C0DE3B000000000000004, A1D0C0DE3F000000000000002);
 			productReference = A1D0C0DE32000000000000001; productType = "com.apple.product-type.tool";
 		};
 
@@ -238,7 +245,7 @@
 			fileSystemSynchronizedGroups = (
 				A1D0C0DE3100000000000012 /* LightTouchDevice */,
 			);
-			packageProductDependencies = (A1D0C0DE35000000000000002, A1D0C0DE36000000000000002);
+			packageProductDependencies = (A1D0C0DE35000000000000002, A1D0C0DE36000000000000002, A1D0C0DE3F000000000000002);
 			name = LightTouchDevice;
 			productName = LightTouchDevice;
 			productReference = A1D0C0DE3100000000000001 /* LightTouchDevice */;
@@ -278,6 +285,8 @@
 				A1D0C0DE3C000000000000002 /* LightTouchCore */,
 				EA17D84C3023A55900BDF83E /* Subprocess */,
 				A1D0C0DE37000000000000002 /* ZIPFoundation */,
+				A1D0C0DE3E000000000000002 /* Perception */,
+				A1D0C0DE3F000000000000002 /* HostCompat */,
 				A1D0C0DE3D000000000000002 /* Sparkle */,
 			);
 			productName = LightTouchMac;
@@ -317,8 +326,10 @@
 				A1D0C0DE3B000000000000001,
 				A1D0C0DE3C000000000000001,
 				A1D0C0DE3A000000000000010,
-				EA17D84B3023A55900BDF83E /* XCRemoteSwiftPackageReference "swift-subprocess" */,
+				A1D0C0DE3F000000000000001 /* XCLocalSwiftPackageReference "Packages/HostCompat" */,
+				EA17D84B3023A55900BDF83E /* XCLocalSwiftPackageReference "Packages/SubprocessCompat" */,
 				A1D0C0DE37000000000000001 /* XCRemoteSwiftPackageReference "ZIPFoundation" */,
+				A1D0C0DE3E000000000000001 /* XCRemoteSwiftPackageReference "swift-perception" */,
 				A1D0C0DE3D000000000000001 /* XCRemoteSwiftPackageReference "Sparkle" */,
 			);
 			preferredProjectObjectVersion = 77;
@@ -383,15 +394,15 @@
 
 /* Begin XCBuildConfiguration section */
 		A1D0C0DE3A00000000000000A = {isa = XCBuildConfiguration; name = Debug; buildSettings = {
- MACOSX_DEPLOYMENT_TARGET = 14.4; SWIFT_VERSION = 6.0; DEVELOPMENT_TEAM = SM75355Y6R;
+ MACOSX_DEPLOYMENT_TARGET = 12.0; SWIFT_VERSION = 6.0; DEVELOPMENT_TEAM = SM75355Y6R;
  ENABLE_HARDENED_RUNTIME = YES; PRODUCT_NAME = "$(TARGET_NAME)"; ENABLE_DEBUG_DYLIB = NO; SKIP_INSTALL = YES;
  GENERATE_INFOPLIST_FILE = YES; OTHER_LDFLAGS = ""; PRODUCT_BUNDLE_IDENTIFIER = gold.samhenri.LightTouchMac.firmwarekit; SWIFT_MODULE_NAME = FirmwareKitCLI; CODE_SIGN_ENTITLEMENTS = Configuration/Tool.entitlements; CODE_SIGN_STYLE = Automatic; }; };
 		A1D0C0DE3A00000000000000B = {isa = XCBuildConfiguration; name = Release; buildSettings = {
- MACOSX_DEPLOYMENT_TARGET = 14.4; SWIFT_VERSION = 6.0; DEVELOPMENT_TEAM = SM75355Y6R;
+ MACOSX_DEPLOYMENT_TARGET = 12.0; SWIFT_VERSION = 6.0; DEVELOPMENT_TEAM = SM75355Y6R;
  ENABLE_HARDENED_RUNTIME = YES; PRODUCT_NAME = "$(TARGET_NAME)"; ENABLE_DEBUG_DYLIB = NO; SKIP_INSTALL = YES;
  GENERATE_INFOPLIST_FILE = YES; OTHER_LDFLAGS = ""; PRODUCT_BUNDLE_IDENTIFIER = gold.samhenri.LightTouchMac.firmwarekit; SWIFT_MODULE_NAME = FirmwareKitCLI; CODE_SIGN_ENTITLEMENTS = Configuration/Tool.entitlements; CODE_SIGN_STYLE = Manual; CODE_SIGN_IDENTITY = "Developer ID Application"; }; };
 		A1D0C0DE32000000000000009 = {isa = XCBuildConfiguration; name = Debug; buildSettings = {
- MACOSX_DEPLOYMENT_TARGET = 14.4; SWIFT_VERSION = 6.0; SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+ MACOSX_DEPLOYMENT_TARGET = 12.0; SWIFT_VERSION = 6.0; SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
  SWIFT_APPROACHABLE_CONCURRENCY = YES; CODE_SIGN_STYLE = Automatic; DEVELOPMENT_TEAM = SM75355Y6R;
  ENABLE_HARDENED_RUNTIME = YES; PRODUCT_NAME = "$(TARGET_NAME)"; ENABLE_DEBUG_DYLIB = NO;
  GENERATE_INFOPLIST_FILE = YES; OTHER_LDFLAGS = "-limobiledevice-1.0 -lplist-2.0"; PRODUCT_BUNDLE_IDENTIFIER = gold.samhenri.LightTouchMac.LightTouchServices; SKIP_INSTALL = YES; CODE_SIGN_ENTITLEMENTS = Configuration/Tool.entitlements;
@@ -399,7 +410,7 @@
  HEADER_SEARCH_PATHS = ("$(VENDOR_DIR)/include", /opt/homebrew/include, /usr/local/include);
  LIBRARY_SEARCH_PATHS = ("$(VENDOR_DIR)/Frameworks", /opt/homebrew/lib, /usr/local/lib); }; };
 		A1D0C0DE3200000000000000A = {isa = XCBuildConfiguration; name = Release; buildSettings = {
- MACOSX_DEPLOYMENT_TARGET = 14.4; SWIFT_VERSION = 6.0; SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+ MACOSX_DEPLOYMENT_TARGET = 12.0; SWIFT_VERSION = 6.0; SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
  SWIFT_APPROACHABLE_CONCURRENCY = YES; CODE_SIGN_STYLE = Manual; CODE_SIGN_IDENTITY = "Developer ID Application"; DEVELOPMENT_TEAM = SM75355Y6R;
  ENABLE_HARDENED_RUNTIME = YES; PRODUCT_NAME = "$(TARGET_NAME)"; ENABLE_DEBUG_DYLIB = NO;
  GENERATE_INFOPLIST_FILE = YES; OTHER_LDFLAGS = "-limobiledevice-1.0 -lplist-2.0"; PRODUCT_BUNDLE_IDENTIFIER = gold.samhenri.LightTouchMac.LightTouchServices; SKIP_INSTALL = YES; CODE_SIGN_ENTITLEMENTS = Configuration/Tool.entitlements;
@@ -686,14 +697,6 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		EA17D84B3023A55900BDF83E /* XCRemoteSwiftPackageReference "swift-subprocess" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/swiftlang/swift-subprocess";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.0.0;
-			};
-		};
 		A1D0C0DE37000000000000001 /* XCRemoteSwiftPackageReference "ZIPFoundation" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/weichsel/ZIPFoundation.git";
@@ -710,6 +713,14 @@
 				minimumVersion = 2.0.0;
 			};
 		};
+		A1D0C0DE3E000000000000001 /* XCRemoteSwiftPackageReference "swift-perception" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/pointfreeco/swift-perception.git";
+			requirement = {
+				kind = exactVersion;
+				version = 2.0.9;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCLocalSwiftPackageReference section */
@@ -718,6 +729,8 @@
 		A1D0C0DE36000000000000001 = {isa = XCLocalSwiftPackageReference; relativePath = Packages/DeviceRuntime; };
 		A1D0C0DE3B000000000000001 = {isa = XCLocalSwiftPackageReference; relativePath = Packages/DeviceServices; };
 		A1D0C0DE3C000000000000001 = {isa = XCLocalSwiftPackageReference; relativePath = Packages/LightTouchCore; };
+		EA17D84B3023A55900BDF83E /* XCLocalSwiftPackageReference "Packages/SubprocessCompat" */ = {isa = XCLocalSwiftPackageReference; relativePath = Packages/SubprocessCompat; };
+		A1D0C0DE3F000000000000001 /* XCLocalSwiftPackageReference "Packages/HostCompat" */ = {isa = XCLocalSwiftPackageReference; relativePath = Packages/HostCompat; };
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -726,7 +739,7 @@
 		A1D0C0DE35000000000000002 = {isa = XCSwiftPackageProductDependency; package = A1D0C0DE35000000000000001; productName = HostRuntime; };
 		EA17D84C3023A55900BDF83E /* Subprocess */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = EA17D84B3023A55900BDF83E /* XCRemoteSwiftPackageReference "swift-subprocess" */;
+			package = EA17D84B3023A55900BDF83E /* XCLocalSwiftPackageReference "Packages/SubprocessCompat" */;
 			productName = Subprocess;
 		};
 		A1D0C0DE3C000000000000002 = {isa = XCSwiftPackageProductDependency; package = A1D0C0DE3C000000000000001; productName = LightTouchCore; };
@@ -744,6 +757,12 @@
 			package = A1D0C0DE3D000000000000001 /* XCRemoteSwiftPackageReference "Sparkle" */;
 			productName = Sparkle;
 		};
+		A1D0C0DE3E000000000000002 /* Perception */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1D0C0DE3E000000000000001 /* XCRemoteSwiftPackageReference "swift-perception" */;
+			productName = Perception;
+		};
+		A1D0C0DE3F000000000000002 /* HostCompat */ = {isa = XCSwiftPackageProductDependency; package = A1D0C0DE3F000000000000001 /* XCLocalSwiftPackageReference "Packages/HostCompat" */; productName = HostCompat; };
 /* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = EA17D82A30239D9B00BDF83E /* Project object */;

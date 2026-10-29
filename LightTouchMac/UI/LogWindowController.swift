@@ -1,3 +1,4 @@
+import HostCompat
 import Cocoa
 import LightTouchCore
 
@@ -49,7 +50,7 @@ final class LogTextView: NSScrollView {
         polling = Task { [weak self] in
             while !Task.isCancelled {
                 await self?.refresh()
-                do { try await Task.sleep(for: .seconds(1)) } catch { break }
+                do { try await Task.hostSleep(for: .seconds(1)) } catch { break }
             }
         }
     }

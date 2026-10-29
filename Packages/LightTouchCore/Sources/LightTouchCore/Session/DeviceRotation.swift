@@ -34,10 +34,11 @@
 // landscape and the shell follows it (issue 103). Every board's panel scans
 // out as is, whatever way the device is held, so this holds for all of them.
 
+import HostCompat
 import DeviceRuntime
 import Foundation
 import HostRuntime
-import Observation
+import Perception
 
 /// What the rotation reads of the session, and the guest's two orientation sources.
 public protocol RotationHost: AnyObject {
@@ -54,11 +55,11 @@ public protocol RotationHost: AnyObject {
     func guestOrientation() async throws -> Int?
 }
 
-@Observable public final class DeviceRotation {
-    @ObservationIgnored private unowned let host: RotationHost
-    @ObservationIgnored private let settings: DeviceSettingsFile
+@Perceptible public final class DeviceRotation {
+    @PerceptionIgnored private unowned let host: RotationHost
+    @PerceptionIgnored private let settings: DeviceSettingsFile
     /// The iPad sets its accelerometer outright (Board.orientationSource == .springBoard).
-    @ObservationIgnored private let setsAccelerometer: Bool
+    @PerceptionIgnored private let setsAccelerometer: Bool
 
     public init(host: RotationHost, settings: DeviceSettingsFile, setsAccelerometer: Bool) {
         self.host = host
@@ -160,7 +161,7 @@ public protocol RotationHost: AnyObject {
     /// 180, -90). nil until the first line arrives — that first one only seeds
     /// this, so a watcher that attaches to an already-running guest never yanks
     /// the shell around on connect.
-    @ObservationIgnored var lastGuestOrientation: Int?
+    @PerceptionIgnored var lastGuestOrientation: Int?
     private var task: Task<Void, Never>? {
         get { host.bootScope[.orientation] }
         set { host.bootScope[.orientation] = newValue }
@@ -203,7 +204,7 @@ public protocol RotationHost: AnyObject {
         task = Task { [weak self] in
             var last: Int?
             while !Task.isCancelled {
-                try? await Task.sleep(for: .seconds(3))
+                try? await Task.hostSleep(for: .seconds(3))
                 guard let self else { return }
                 if host.state == .booting { last = nil }  // a restart: adopt again
                 // Only once lockdown has answered: before that every try is "not reachable over USB yet", every 3 s in the log.
@@ -254,10 +255,10 @@ public protocol RotationHost: AnyObject {
                     } catch {
                         if Task.isCancelled { return }
                         lastGuestOrientation = nil
-                        do { try await Task.sleep(for: .seconds(5)) } catch { return }
+                        do { try await Task.hostSleep(for: .seconds(5)) } catch { return }
                     }
                 }
-                do { try await Task.sleep(for: .milliseconds(250)) } catch { return }
+                do { try await Task.hostSleep(for: .milliseconds(250)) } catch { return }
             }
         }
     }

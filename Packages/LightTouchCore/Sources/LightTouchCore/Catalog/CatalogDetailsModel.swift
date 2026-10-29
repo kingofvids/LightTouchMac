@@ -2,9 +2,9 @@
 // device, the chosen copy revalidated against the server, and what Install will fetch.
 
 import Foundation
-import Observation
+import Perception
 
-@MainActor @Observable public final class CatalogDetailsModel {
+@MainActor @Perceptible public final class CatalogDetailsModel {
     public typealias Row = (version: CatalogVersion, copy: CatalogVersion.Copy)
     public let app: CatalogApp
     /// The device's model, iOS version and executable slice (its catalog entry).

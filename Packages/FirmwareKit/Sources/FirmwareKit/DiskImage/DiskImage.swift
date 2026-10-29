@@ -15,6 +15,7 @@
 // every macOS; the real calls are tested on the backend the host has. Tools run through swift-subprocess.
 // FIRMWAREKIT_DISK_IMAGE=hdiutil|diskutil overrides the choice (tests, and a host where one misbehaves).
 
+import HostCompat
 import Foundation
 import Subprocess
 import System
@@ -160,7 +161,7 @@ public enum DiskImage {
                     if backend == .diskutil, force, i > 0 { try await run(["/usr/sbin/diskutil", "eject", dev]) }
                     return
                 }
-                try await Task.sleep(for: .milliseconds(500))
+                try await Task.hostSleep(for: .milliseconds(500))
             }
             throw FirmwareError(.internal, "could not detach \(dev); attached image retained")
         }.value
@@ -213,7 +214,7 @@ public enum DiskImage {
     static func attachedImagesSeen() async throws -> [(image: String, device: String)] {
         var seen: [String: String] = [:]
         for read in 0..<3 {
-            if read > 0 { try await Task.sleep(for: .milliseconds(100)) }
+            if read > 0 { try await Task.hostSleep(for: .milliseconds(100)) }
             for item in try await checkedAttachedImages() { seen[item.device] = item.image }
         }
         return seen.map { (image: $0.value, device: $0.key) }

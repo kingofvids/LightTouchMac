@@ -1,3 +1,4 @@
+import Perception
 import Cocoa
 import LightTouchCore
 import SwiftUI
@@ -33,9 +34,10 @@ final class CatalogDetailsViewController: NSHostingController<CatalogDetailsView
 }
 
 struct CatalogDetailsView: View {
-    @Bindable var model: CatalogDetailsModel
+    @Perception.Bindable var model: CatalogDetailsModel
 
     var body: some View {
+        WithPerceptionTracking {
         VStack(spacing: 0) {
             Form {
                 Section {
@@ -61,8 +63,8 @@ struct CatalogDetailsView: View {
                     .foregroundStyle(.secondary)
                 }
             }
-            .formStyle(.grouped)
-            .scrollDisabled(true)
+            .compatGroupedForm()
+            .compatScrollDisabled(true)
             .fixedSize(horizontal: false, vertical: true)
             HStack {
                 Spacer()
@@ -78,6 +80,7 @@ struct CatalogDetailsView: View {
         .frame(width: 440)
         .task { await model.load() }
         .task(id: model.selection) { await model.check() }
+    }
     }
 
     /// What the copy needs: the listing's minimum, or the binary's own when it asks for more.

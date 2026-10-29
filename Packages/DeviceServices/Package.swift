@@ -8,19 +8,20 @@ import PackageDescription
 
 let package = Package(
     name: "DeviceServices",
-    platforms: [.macOS(.v13)],
+    platforms: [.macOS(.v12)],
     products: [
         .library(name: "HostServiceWire", type: .static, targets: ["HostServiceWire"]),
         .library(name: "HostServiceClient", type: .static, targets: ["HostServiceClient"]),
     ],
-    dependencies: [.package(url: "https://github.com/swiftlang/swift-subprocess.git", exact: "1.0.0")],
+    dependencies: [.package(path: "../SubprocessCompat"), .package(path: "../HostCompat")],
     targets: [
-        .target(name: "HostServiceWire"),
+        .target(name: "HostServiceWire", dependencies: [.product(name: "HostCompat", package: "HostCompat")]),
         .target(
             name: "HostServiceClient",
             dependencies: [
                 "HostServiceWire",
-                .product(name: "Subprocess", package: "swift-subprocess"),
+                .product(name: "Subprocess", package: "SubprocessCompat"),
+                .product(name: "HostCompat", package: "HostCompat"),
             ]
         ),
         .testTarget(name: "HostServiceWireTests", dependencies: ["HostServiceWire"]),

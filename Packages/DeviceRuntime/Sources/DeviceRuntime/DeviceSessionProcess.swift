@@ -1,3 +1,4 @@
+import HostCompat
 import Foundation
 import HostRuntime
 
@@ -161,7 +162,7 @@ public enum DeviceProcessDeath: Equatable {
     /// reaping ownership even after this finite wait times out.
     public func waitForExit(timeout: TimeInterval) async -> Bool {
         let wait = Task { @MainActor in
-            let clock = ContinuousClock()
+            let clock = HostContinuousClock()
             let deadline = clock.now.advanced(by: .seconds(timeout))
             while !isDead, clock.now < deadline {
                 try? await clock.sleep(until: min(deadline, clock.now.advanced(by: .milliseconds(50))))

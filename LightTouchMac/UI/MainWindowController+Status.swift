@@ -1,3 +1,4 @@
+import HostCompat
 import Cocoa
 import FirmwareSchema
 import HostRuntime
@@ -93,7 +94,7 @@ extension MainWindowController {
         if startupTask == nil {
             startupTask = Task { [weak self] in
                 while !Task.isCancelled {
-                    do { try await Task.sleep(for: .seconds(1)) } catch { return }
+                    do { try await Task.hostSleep(for: .seconds(1)) } catch { return }
                     guard let self else { return }
                     updateStartupStatus()
                 }

@@ -1,11 +1,12 @@
 // The device connection's health as the session sees it: the standing issue from failed service reads, the
 // recovery of an unresponsive management service, and the once-per-boot activation verdict.
 
+import HostCompat
 import DeviceRuntime
 import Foundation
 import HostRuntime
 import HostServiceWire
-import Observation
+import Perception
 
 /// What connection recovery and the activation check read and change on the session.
 public protocol ConnectionHost: AnyObject {
@@ -30,7 +31,7 @@ public protocol ConnectionHost: AnyObject {
 
 /// A transient installd transition is not a dead device. If repeated reads fail, reopen the management service
 /// through the independent guest agent. Never reboot the iPod or touch its applications to repair a connection.
-@Observable public final class ConnectionRecovery {
+@Perceptible public final class ConnectionRecovery {
     private unowned let host: ConnectionHost
     private let notices: DeviceNotices
     public init(host: ConnectionHost, notices: DeviceNotices) {
@@ -42,7 +43,7 @@ public protocol ConnectionHost: AnyObject {
     private var failures = 0
     var lastRecovery = Date.distantPast
     /// After lockdownd restarts, before the app list is read again.
-    var settle: Duration = .seconds(2)
+    var settle: HostDuration = .seconds(2)
     public var isReconnecting = false
     private var task: Task<Void, Never>? {
         get { host.bootScope[.recovery] }
@@ -125,7 +126,7 @@ public protocol ConnectionHost: AnyObject {
                 if host.guestAgentAlive {
                     try await host.reconnectManagement()
                     logEvent("device: restarted unresponsive management service; reconnecting")
-                    try await Task.sleep(for: settle)
+                    try await Task.hostSleep(for: settle)
                     guard !Task.isCancelled, generation == host.bootScope.generation, host.isRunning else { return }
                     host.appsMayHaveChanged()
                 }
@@ -172,7 +173,7 @@ public final class ActivationCheck {
 
     private var checkedGeneration: Int?
     /// Between the three answers a verdict needs.
-    var retryDelay: Duration = .seconds(10)
+    var retryDelay: HostDuration = .seconds(10)
     private var task: Task<Void, Never>? {
         get { host.bootScope[.activation] }
         set { host.bootScope[.activation] = newValue }
@@ -188,7 +189,7 @@ public final class ActivationCheck {
             defer { if generation == self?.generation { self?.task = nil } }
             var state: String?
             for attempt in 0..<3 {
-                if attempt > 0 { try? await Task.sleep(for: retryDelay) }
+                if attempt > 0 { try? await Task.hostSleep(for: retryDelay) }
                 guard let self, generation == self.generation else { return }
                 let host = host
                 let services = services  // held for this attempt, as the session itself was

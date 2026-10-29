@@ -1,3 +1,4 @@
+import HostCompat
 import Darwin
 import Foundation
 import os
@@ -10,7 +11,7 @@ public nonisolated final class StorageLease: Sendable {
         case inUse
         case pendingEdit
     }
-    private let descriptor: OSAllocatedUnfairLock<Int32?>
+    private let descriptor: HostLock<Int32?>
 
     /// Resume callers may allow a pending edit only while validating their exact
     /// durable session under this same lease; ordinary boot/export/maintenance deny it.
@@ -32,7 +33,7 @@ public nonisolated final class StorageLease: Sendable {
             {
                 throw Failure.pendingEdit
             }
-            descriptor = OSAllocatedUnfairLock(initialState: fd)
+            descriptor = HostLock(initialState: fd)
         } catch {
             // Refused for a pending edit, the lock was already taken: release it as close() does, since a child
             // being spawned at this moment shares the descriptor until its exec.
@@ -41,12 +42,12 @@ public nonisolated final class StorageLease: Sendable {
             throw error
         }
     }
-    public var isClosed: Bool { descriptor.withLock { $0 == nil } }
+    public var isClosed: Bool { descriptor.hostWithLock { $0 == nil } }
 
     /// End an explicitly shared ownership scope after all operations finish.
     /// Retained aliases are then closed owners; the inode remains in place.
     public func close() {
-        descriptor.withLock { descriptor in
+        descriptor.hostWithLock { descriptor in
             guard let fd = descriptor else { return }
             descriptor = nil
             // Closing only this reference can leave a transient inherited

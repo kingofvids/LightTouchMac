@@ -4,9 +4,9 @@
 
 import Foundation
 import HostServiceWire
-import Observation
+import Perception
 
-@Observable public final class FilesConnection {
+@Perceptible public final class FilesConnection {
     public struct Binding: Equatable, Sendable {
         public let device: UUID
         public let endpoint: HostServiceEndpoint

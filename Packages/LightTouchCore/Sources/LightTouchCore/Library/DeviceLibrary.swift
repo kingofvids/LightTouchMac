@@ -5,9 +5,9 @@
 
 import CoreServices
 import Foundation
-import Observation
+import Perception
 
-@MainActor @Observable
+@MainActor @Perceptible
 public final class DeviceLibrary {
     /// Posted on the main actor after `instances` changes. The object is the library.
     public static let didChangeNotification = Notification.Name("DeviceLibraryDidChange")
@@ -17,7 +17,7 @@ public final class DeviceLibrary {
     public let state: URL
     /// Oldest first.
     public private(set) var instances: [DeviceInstance]
-    @ObservationIgnored private var watch: StateRootWatch?
+    @PerceptionIgnored private var watch: StateRootWatch?
 
     public init(state: URL) {
         self.state = state

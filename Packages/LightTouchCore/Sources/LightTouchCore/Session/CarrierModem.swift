@@ -4,13 +4,13 @@
 import DeviceRuntime
 import Foundation
 import HostRuntime
-import Observation
+import Perception
 
-@Observable public final class CarrierModem: CarrierBackend {
+@Perceptible public final class CarrierModem: CarrierBackend {
     public let hasCellular: Bool
-    @ObservationIgnored private let settings: DeviceSettingsFile
-    @ObservationIgnored private let scope: BootSessionScope
-    @ObservationIgnored private let link: () -> HelperLink?
+    @PerceptionIgnored private let settings: DeviceSettingsFile
+    @PerceptionIgnored private let scope: BootSessionScope
+    @PerceptionIgnored private let link: () -> HelperLink?
 
     public init(
         hasCellular: Bool,

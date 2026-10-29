@@ -1,3 +1,4 @@
+import HostCompat
 import Cocoa
 import DeviceRuntime
 import HostRuntime
@@ -95,7 +96,7 @@ extension AppsInspectorViewController {
         }
         searchTask = Task { [weak self] in
             if !query.isEmpty {
-                try? await Task.sleep(for: .milliseconds(300))  // debounce typing
+                try? await Task.hostSleep(for: .milliseconds(300))  // debounce typing
             }
             guard let self, !Task.isCancelled else { return }
             // Only the response to what's in the field now may land — a slower
@@ -147,7 +148,7 @@ extension AppsInspectorViewController {
     private func reloadCatalogRow(_ ipaID: Int) {
         guard searching, catalogResults.contains(where: { $0.ipaID == ipaID }), catalogIconReload == nil else { return }
         catalogIconReload = Task { [weak self] in
-            try? await Task.sleep(for: .milliseconds(100))
+            try? await Task.hostSleep(for: .milliseconds(100))
             guard let self else { return }
             catalogIconReload = nil
             if searching { reloadTablePreservingSelection() }

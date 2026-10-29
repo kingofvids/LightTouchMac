@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "macos_deployment_target": "14.0",
+  "macos_deployment_target": "12.0",
   "architecture": "arm64",
   "packages": [
     {

@@ -1,3 +1,4 @@
+import HostCompat
 import Cocoa
 import DeviceRuntime
 import FirmwareSchema
@@ -5,7 +6,7 @@ import HostRuntime
 import HostServiceClient
 import HostServiceWire
 import LightTouchCore
-import Observation
+import Perception
 
 extension EmulatorController {
     // MARK: - App management
@@ -98,7 +99,7 @@ extension EmulatorController {
         if on { now.insert(feature) } else { now.remove(feature) }
         accessibilityOn = now
         logEvent("accessibility: \(feature) \(on ? "on" : "off")")
-        try? await Task.sleep(for: .seconds(3))
+        try? await Task.hostSleep(for: .seconds(3))
         readAccessibility()
     }
 

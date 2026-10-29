@@ -1,16 +1,18 @@
 // The Tweaks panel (Device ▸ Tweaks…): one device's hidden switches (TweaksPanelModel), by section. Each row's caption
 // is what it changes; on firmware that doesn't have it, the row stays, disabled.
 
+import Perception
 import Cocoa
 import HostRuntime
 import LightTouchCore
 import SwiftUI
 
 struct TweaksPanel: View {
-    @Bindable var model: TweaksPanelModel
+    @Perception.Bindable var model: TweaksPanelModel
     @State private var showsTouches = false
 
     var body: some View {
+        WithPerceptionTracking {
         Form {
             ForEach(Tweak.Section.allCases, id: \.self) { section in
                 Section(section.rawValue) {
@@ -56,9 +58,10 @@ struct TweaksPanel: View {
                 Text(status).font(.callout).foregroundStyle(.secondary)
             }
         }
-        .formStyle(.grouped)
+        .compatGroupedForm()
         .frame(minWidth: 380, idealWidth: 420, minHeight: 560)
         .task(id: model.isRunning) { await model.listHiddenApps() }
+    }
     }
 
     @ViewBuilder
@@ -108,9 +111,10 @@ struct TweaksPanel: View {
 /// Marketing Status Bar's status bar: the clock's text and the carrier wherever it works; the bars, battery and
 /// indicators one by one where UIKit takes overrides (4.2 on), else drawn full.
 private struct StatusBarOptions: View {
-    @Bindable var model: TweaksPanelModel
+    @Perception.Bindable var model: TweaksPanelModel
 
     var body: some View {
+        WithPerceptionTracking {
         let style = model.settings.statusBar
         let each = model.statusBarSetsEach
         CommitField(title: "Time", prompt: "Real time", value: style.time) { v in model.setStatusBar { $0.time = v } }
@@ -143,6 +147,7 @@ private struct StatusBarOptions: View {
             Text("This version draws the bars and battery full.").font(.callout).foregroundStyle(.secondary)
         }
     }
+    }
 
     private func binding<T>(_ field: WritableKeyPath<StatusBarStyle, T>) -> Binding<T> {
         Binding(
@@ -166,9 +171,9 @@ private struct CommitField: View {
         TextField(title, text: $text, prompt: Text(prompt))
             .focused($focused)
             .onSubmit { save() }
-            .onChange(of: focused) { if !focused { save() } }
+            .compatOnChange(of: focused) { if !focused { save() } }
             .onAppear { text = value }
-            .onChange(of: value) { text = value }
+            .compatOnChange(of: value) { text = value }
     }
 
     private func save() {

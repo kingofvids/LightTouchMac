@@ -2,7 +2,7 @@ import DeviceRuntime
 import Foundation
 import HostRuntime
 import HostServiceWire
-import Observation
+import Perception
 import Testing
 import os
 
@@ -11,7 +11,7 @@ import os
 /// Whether `body` changes anything `read` reads, as Observation reports it (at the change, synchronously).
 func observes(_ read: () -> Void, during body: () throws -> Void) rethrows -> Bool {
     let raised = OSAllocatedUnfairLock(initialState: false)
-    withObservationTracking(read) { raised.withLock { $0 = true } }
+    withPerceptionTracking(read) { raised.withLock { $0 = true } }
     try body()
     return raised.withLock { $0 }
 }

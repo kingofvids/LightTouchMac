@@ -4,13 +4,13 @@
 import DeviceRuntime
 import Foundation
 import HostRuntime
-import Observation
+import Perception
 
-@Observable public final class DeviceOptions {
-    @ObservationIgnored private let settings: DeviceSettingsFile
-    @ObservationIgnored private let board: String
-    @ObservationIgnored private let link: () -> HelperLink?
-    @ObservationIgnored private let requestLocalNetworkAccess: () -> Void
+@Perceptible public final class DeviceOptions {
+    @PerceptionIgnored private let settings: DeviceSettingsFile
+    @PerceptionIgnored private let board: String
+    @PerceptionIgnored private let link: () -> HelperLink?
+    @PerceptionIgnored private let requestLocalNetworkAccess: () -> Void
 
     public init(
         settings: DeviceSettingsFile,
