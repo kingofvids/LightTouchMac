@@ -49,13 +49,8 @@ struct AddDeviceSummary: View {
                     }
                 }
                 Spacer(minLength: 12)
-                Grid(alignment: .leading, horizontalSpacing: 8, verticalSpacing: 3) {
-                    if let released = released(entry) { fact("Released", released) }
-                    fact("IPSW", download(entry))
-                    if let source = source(entry) { fact("Source", source) }
-                    fact("Prepared", entry.estimates.preparedBytes.formatted(.byteCount(style: .file)))
-                }
-                .fixedSize()
+                FactsGrid(rows: facts(entry))
+                    .fixedSize()
             }
             Divider()
             Text("Supported")
@@ -74,12 +69,13 @@ struct AddDeviceSummary: View {
         .font(.callout)
     }
 
-    private func fact(_ label: String, _ value: String) -> some View {
-        GridRow {
-            Text(label).foregroundStyle(.secondary).gridColumnAlignment(.trailing)
-            Text(value).monospacedDigit()
-        }
-        .accessibilityElement(children: .combine)
+    private func facts(_ entry: FirmwareCatalog.Entry) -> [(label: String, value: String)] {
+        var rows: [(label: String, value: String)] = []
+        if let released = released(entry) { rows.append(("Released", released)) }
+        rows.append(("IPSW", download(entry)))
+        if let source = source(entry) { rows.append(("Source", source)) }
+        rows.append(("Prepared", entry.estimates.preparedBytes.formatted(.byteCount(style: .file))))
+        return rows
     }
 
     private func released(_ entry: FirmwareCatalog.Entry) -> String? {
@@ -118,14 +114,13 @@ struct AddDeviceSummary: View {
                 }
             }
             Spacer(minLength: 12)
-            Grid(alignment: .leading, horizontalSpacing: 8, verticalSpacing: 3) {
+            FactsGrid(rows: {
                 let bytes = Self.downloadBytes(entries, downloaded: downloaded)
-                fact("Download", bytes == 0 ? "None" : bytes.formatted(.byteCount(style: .file)))
-                fact(
-                    "Prepared",
-                    entries.map(\.estimates.preparedBytes).reduce(0, +).formatted(.byteCount(style: .file))
-                )
-            }
+                return [
+                    ("Download", bytes == 0 ? "None" : bytes.formatted(.byteCount(style: .file))),
+                    ("Prepared", entries.map(\.estimates.preparedBytes).reduce(0, +).formatted(.byteCount(style: .file))),
+                ]
+            }())
             .fixedSize()
         }
         .font(.callout)

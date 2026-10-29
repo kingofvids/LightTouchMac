@@ -129,7 +129,7 @@ struct AddDeviceView: View {
     /// It opens with the versions list focused; left to itself AppKit would focus its first key view, the devices.
     func makeSheet() -> NSWindow {
         let hosting = NSHostingController(rootView: self)
-        hosting.sizingOptions = [.minSize]
+        if #available(macOS 13, *) { hosting.sizingOptions = [.minSize] }
         let sheet = NSWindow(contentViewController: hosting)
         sheet.styleMask = [.titled, .resizable]
         sheet.setContentSize(NSSize(width: 800, height: 620))

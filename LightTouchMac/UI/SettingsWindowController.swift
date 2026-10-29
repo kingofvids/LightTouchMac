@@ -89,14 +89,14 @@ private struct SettingsPane<Content: View>: View {
     var body: some View {
         ScrollView {
             content
-                .formStyle(.grouped)
-                .scrollDisabled(true)
+                .compatGroupedForm()
+                .compatScrollDisabled(true)
                 .fixedSize(horizontal: false, vertical: true)
                 .onGeometryChange(for: CGFloat.self, of: \.size.height) { height = $0 }
         }
-        .scrollDisabled(height <= maxHeight)
+        .compatScrollDisabled(height <= maxHeight)
         .frame(width: 500, height: min(height, maxHeight))
-        .onChange(of: height) {
+        .compatOnChange(of: height) {
             // After this layout pass, so the hosting view's fitting size is the new one.
             DispatchQueue.main.async { resize.action?() }
         }

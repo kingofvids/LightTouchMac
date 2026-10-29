@@ -90,7 +90,13 @@ final class MainWindowController: NSWindowController, NSToolbarDelegate, NSWindo
         deviceItem.minimumThickness = 320
         split.addSplitViewItem(deviceItem)
 
-        inspectorItem = NSSplitViewItem(inspectorWithViewController: inspectorContainer)
+        if #available(macOS 14, *) {
+            inspectorItem = NSSplitViewItem(inspectorWithViewController: inspectorContainer)
+        } else {
+            // Before macOS 14 there is no inspector item: an ordinary collapsible pane on the trailing edge.
+            inspectorItem = NSSplitViewItem(viewController: inspectorContainer)
+            inspectorItem.canCollapse = true
+        }
         // The widths the sidebar guidelines ask for: enough for an app name at a
         // readable size, not so much that it competes with the device.
         inspectorItem.minimumThickness = 280

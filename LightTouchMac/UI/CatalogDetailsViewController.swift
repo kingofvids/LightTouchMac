@@ -63,8 +63,8 @@ struct CatalogDetailsView: View {
                     .foregroundStyle(.secondary)
                 }
             }
-            .formStyle(.grouped)
-            .scrollDisabled(true)
+            .compatGroupedForm()
+            .compatScrollDisabled(true)
             .fixedSize(horizontal: false, vertical: true)
             HStack {
                 Spacer()

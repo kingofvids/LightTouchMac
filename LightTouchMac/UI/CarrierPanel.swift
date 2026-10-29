@@ -115,7 +115,7 @@ struct CarrierPanel: View {
                             }
                     }
                     .onAppear { center(on: model.settings.location) }
-                    .onChange(of: model.settings.location) { center(on: model.settings.location) }
+                    .compatOnChange(of: model.settings.location) { center(on: model.settings.location) }
                     LabeledContent("Coordinates") {
                         HStack {
                             TextField("Latitude", text: $model.latitude).labelsHidden()
@@ -146,7 +146,7 @@ struct CarrierPanel: View {
                 Text(message).font(.callout).foregroundStyle(.secondary)
             }
         }
-        .formStyle(.grouped)
+        .compatGroupedForm()
         .frame(minWidth: 360, idealWidth: 380, minHeight: 520)
         .task {
             // ~1 Hz while the panel is on screen; SwiftUI cancels it when the view goes away.

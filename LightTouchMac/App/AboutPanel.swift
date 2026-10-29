@@ -84,17 +84,31 @@ struct LicensesView: View {
     @State private var selection: AboutCredits.License.ID?
 
     var body: some View {
-        NavigationSplitView {
-            List(licenses, selection: $selection) { Text($0.name) }
-                .navigationSplitViewColumnWidth(min: 180, ideal: 220)
-        } detail: {
-            if let license = licenses.first(where: { $0.id == selection }) {
-                LicenseText(text: license.text)
+        Group {
+            if #available(macOS 13, *) {
+                NavigationSplitView {
+                    List(licenses, selection: $selection) { Text($0.name) }
+                        .navigationSplitViewColumnWidth(min: 180, ideal: 220)
+                } detail: {
+                    detail
+                }
             } else {
-                Text("No Selection").foregroundStyle(.secondary)
+                HSplitView {
+                    List(licenses, selection: $selection) { Text($0.name) }
+                        .frame(minWidth: 180, idealWidth: 220, maxWidth: 320)
+                    detail.frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
             }
         }
         .task { if selection == nil { selection = licenses.first?.id } }
+    }
+
+    @ViewBuilder private var detail: some View {
+        if let license = licenses.first(where: { $0.id == selection }) {
+            LicenseText(text: license.text)
+        } else {
+            Text("No Selection").foregroundStyle(.secondary)
+        }
     }
 }
 

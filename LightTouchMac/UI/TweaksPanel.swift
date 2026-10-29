@@ -58,7 +58,7 @@ struct TweaksPanel: View {
                 Text(status).font(.callout).foregroundStyle(.secondary)
             }
         }
-        .formStyle(.grouped)
+        .compatGroupedForm()
         .frame(minWidth: 380, idealWidth: 420, minHeight: 560)
         .task(id: model.isRunning) { await model.listHiddenApps() }
     }
@@ -171,9 +171,9 @@ private struct CommitField: View {
         TextField(title, text: $text, prompt: Text(prompt))
             .focused($focused)
             .onSubmit { save() }
-            .onChange(of: focused) { if !focused { save() } }
+            .compatOnChange(of: focused) { if !focused { save() } }
             .onAppear { text = value }
-            .onChange(of: value) { text = value }
+            .compatOnChange(of: value) { text = value }
     }
 
     private func save() {

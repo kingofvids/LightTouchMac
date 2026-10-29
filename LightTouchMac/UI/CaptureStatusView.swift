@@ -55,7 +55,7 @@ final class CaptureStatusView: NSView {
 
     init() {
         super.init(frame: .zero)
-        hosting.sizingOptions = []
+        if #available(macOS 13, *) { hosting.sizingOptions = [] }
         hosting.translatesAutoresizingMaskIntoConstraints = false
         addSubview(hosting)
         NSLayoutConstraint.activate([
